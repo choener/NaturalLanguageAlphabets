@@ -15,9 +15,13 @@ module NLP.Alphabet.MultiChar where
 import           Data.Function (on)
 import           Data.Hashable
 import           Data.Interned
-import           Data.String
-import qualified Data.ByteString.Short as S
-import qualified Data.ByteString.Short.Internal as S
+import           Data.Stringable
+import           Data.String (IsString)
+import qualified Data.ByteString.Short as BS
+import qualified Data.ByteString.Short.Internal as BS
+import qualified Data.String as S
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 
 
@@ -29,7 +33,7 @@ internMultiChar = uninternMultiChar . intern
 -- | Wrap a short bytestring. Read and Show instances behave like for normal
 -- strings.
 
-newtype MultiChar = MultiChar { unMultiChar :: S.ShortByteString }
+newtype MultiChar = MultiChar { unMultiChar :: BS.ShortByteString }
   deriving (Eq,Ord)
 
 instance Show MultiChar where
@@ -39,10 +43,15 @@ instance Read MultiChar where
   readsPrec p str = [ (MultiChar x, y) | (x,y) <- readsPrec p str ]
 
 instance Hashable MultiChar where
-  hashWithSalt salt (MultiChar s@(S.SBS sbs)) = hashByteArrayWithSalt sbs 0 (S.length s) salt
+  hashWithSalt salt (MultiChar s@(BS.SBS sbs)) = hashByteArrayWithSalt sbs 0 (BS.length s) salt
 
 instance IsString MultiChar where
-  fromString = MultiChar . fromString
+  fromString = MultiChar . S.fromString
+
+instance Stringable MultiChar where
+  toString   = T.unpack . T.decodeUtf8 . BS.fromShort . unMultiChar
+  fromString = MultiChar . BS.toShort . T.encodeUtf8 . T.pack
+  length     = BS.length . unMultiChar
 
 
 
@@ -54,7 +63,7 @@ data InternedMultiChar = InternedMultiChar
   }
 
 instance IsString InternedMultiChar where
-  fromString = intern . fromString
+  fromString = intern . S.fromString
 
 instance Eq InternedMultiChar where
   (==) = (==) `on` internedMultiCharId
@@ -75,4 +84,9 @@ instance Interned InternedMultiChar where
 imcCache :: Cache InternedMultiChar
 imcCache = mkCache
 {-# NOINLINE imcCache #-}
+
+instance Stringable InternedMultiChar where
+  toString   = toString . uninternMultiChar
+  fromString = intern . fromString
+  length     = Data.Stringable.length . uninternMultiChar
 
