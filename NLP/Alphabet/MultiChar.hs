@@ -12,6 +12,7 @@
 
 module NLP.Alphabet.MultiChar where
 
+import           Control.DeepSeq (NFData(..))
 import           Data.Function (on)
 import           Data.Hashable
 import           Data.Interned
@@ -53,6 +54,9 @@ instance Stringable MultiChar where
   fromString = MultiChar . BS.toShort . T.encodeUtf8 . T.pack
   length     = BS.length . unMultiChar
 
+instance NFData MultiChar where
+  rnf = rnf . unMultiChar
+
 
 
 -- * Interned
@@ -74,6 +78,9 @@ instance Ord InternedMultiChar where
 instance Show InternedMultiChar where
   showsPrec d (InternedMultiChar _ mc) = showsPrec d mc
 
+instance Hashable InternedMultiChar where
+  hashWithSalt salt = hashWithSalt salt . internedMultiCharId
+
 instance Interned InternedMultiChar where
   type Uninterned InternedMultiChar = MultiChar
   newtype Description InternedMultiChar = DMC MultiChar deriving (Eq,Hashable)
@@ -89,4 +96,7 @@ instance Stringable InternedMultiChar where
   toString   = toString . uninternMultiChar
   fromString = intern . fromString
   length     = Data.Stringable.length . uninternMultiChar
+
+instance NFData InternedMultiChar where
+  rnf (InternedMultiChar i c) = rnf i `seq` rnf c
 
