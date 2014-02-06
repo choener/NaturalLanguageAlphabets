@@ -1,6 +1,13 @@
+-- these are all vowels, but all 'a's are equivalent with respect to this
+-- scoring
+EqSet Vowel a â ã
+EqSet Vowel e
+EqSet Vowel i
+EqSet Vowel o
+EqSet Vowel u
 Set Conso    b c d f g h j k m n p q s t v w x y z
 Set Liquid   l r
-Set Vowel    a e i o u   a\' e\' i\' o\' u\'   ə ɐ æ œ   æh ɔh ɒ ɔ
+Set Vowel    a\' e\' i\' o\' u\'   ə ɐ æ œ   æh ɔh ɒ ɔ
 Eq Conso   4
 Eq Liquid  3
 Eq Vowel   2

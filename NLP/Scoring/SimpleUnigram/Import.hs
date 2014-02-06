@@ -22,12 +22,14 @@ import           NLP.Scoring.SimpleUnigram
 data ParsedLine
   = PLset ByteString [InternedMultiChar]
   | PLeq ByteString Double
+  | PLeqset ByteString [InternedMultiChar]
   | PLinset ByteString ByteString Double
   | PLgap Double
   | PLgapopen Double
   | PLgapextend Double
   | PLdefmatch Double
   | PLdefmismatch Double
+  | PLcomment ByteString
   deriving (Show,Eq,Ord)
 
 -- | Here we simple parse individual lines.
@@ -43,6 +45,8 @@ parseLine l = case AB.parseOnly (go <* AB.endOfInput) l of
            <|> PLgapextend   <$ "GapExtend" <*> nm
            <|> PLdefmatch    <$ "Match"     <*> nm
            <|> PLdefmismatch <$ "Mismatch"  <*> nm
+           <|> PLeqset       <$ "EqSet"     <*> wd <*> mc `AB.sepBy1` AB.skipSpace
+           <|> PLcomment     <$ "--"        <*> AB.takeByteString
         wd = AB.skipSpace *> AB.takeWhile1 (not . AB.isHorizontalSpace)
         mc = fromByteString <$> wd
         nm = AB.skipSpace *> AB.double
@@ -60,6 +64,7 @@ genSimpleScoring l = SimpleScoring t g go ge dm di
     xs   = map parseLine ls
     ys   = concatMap genPairs $ iss ++ eqs
     sets = [s  | s@(PLset _ _)     <- xs]
+    eqss = [e  | e@(PLeqset _ _)   <- xs]
     eqs  = [e  | e@(PLeq _ _)      <- xs]
     iss  = [i  | i@(PLinset _ _ _) <- xs]
     [dm] = [dm | PLdefmatch dm     <- xs]
@@ -67,12 +72,25 @@ genSimpleScoring l = SimpleScoring t g go ge dm di
     [g]  = [g  | PLgap g           <- xs]
     [go] = [go | PLgapopen go      <- xs]
     [ge] = [ge | PLgapextend ge    <- xs]
-    genPairs (PLeq    x   d) = let ss = lookupSet x in [ ((s,s),d) | s <- ss ]
+    -- this generates all "equality pairs", i.e. that 'a' == 'a'
+    -- the second list generates all equivalence classes, say that 'a' == 'ã'
+    genPairs (PLeq    x   d) = let ss = lookupSet x
+                                   tt = lookupEqSet x
+                               in  [ ((s,s),d) | s <- ss ] ++
+                                   [ ((s,t),d) | ts <- tt, s<-ts,t<-ts ]
+    -- this creates all variants of, say, vowel against vowel (but unequal)
     genPairs (PLinset x y d) = let ss = lookupSet x
                                    tt = lookupSet y in [ ((s,t),d) | s <- ss, t <- tt ]
-    lookupSet k = let go [] = error $ "missing set for key: " ++ show k
-                      go (PLset n xs:ss) = if k==n then xs else go ss
-                  in  go sets
+    -- find every character from an equivalence set
+    lookupEqSet k = let go [] = []
+                        go (PLeqset n xs:ss) = if k==n then xs : go ss else go ss
+                    in  go eqss
+    -- find every character from a certain class
+    lookupSet k = let go [] = []
+                      go (PLset n xs:ss) = if k==n then xs : go ss else go ss
+                      go (PLeqset n xs:ss) = if k==n then xs : go ss else go ss
+                  in  case go $ sets ++ eqss of
+                        xs -> concat xs
 
 -- | parse a simple scoring file.
 
