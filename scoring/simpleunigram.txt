@@ -1,16 +1,24 @@
--- these are all vowels, but all 'a's are equivalent with respect to this
--- scoring
+-- These are all vowels, but all 'a's are equivalent with respect to this
+-- scoring. It is only required to give 'EqSet's if you have more than one
+-- equivalent character. In this EqSet, everything gets a score of 'Eq Vowel'
+-- (==2).
 EqSet Vowel a â ã
 EqSet Vowel e
 EqSet Vowel i
 EqSet Vowel o
 EqSet Vowel u
+-- These are sets of characters belonging to a certain class. In this case, we
+-- have consonants.
 Set Conso    b c d f g h j k m n p q s t v w x y z
 Set Liquid   l r
 Set Vowel    a\' e\' i\' o\' u\'   ə ɐ æ œ   æh ɔh ɒ ɔ
+-- Here we say that whenever we see a consonant aligned to the same consonant
+-- in the other word, give this score.
 Eq Conso   4
 Eq Liquid  3
 Eq Vowel   2
+-- Whenever we align two consonants that are not equal (or equivalent) we give
+-- this score.
 InSet   Conso    Conso     0
 InSet   Conso    Liquid   -1
 InSet   Conso    Vowel    -999999
@@ -20,8 +28,13 @@ InSet   Liquid   Vowel    -1
 InSet   Vowel    Conso    -999999
 InSet   Vowel    Liquid   -1
 InSet   Vowel    Vowel     0
+-- How to score a gap in a sequence
 Gap         -4
+-- Later on we want affine gap scoring, it's already here but not used
 GapOpen     -4
 GapExtend   -4
+-- This score is used when we align the same character but it's one we didn't
+-- specify in our sets
 Match        1
+-- And finally how to score a mismatch that doesn't fit into the above
 Mismatch    -999999
