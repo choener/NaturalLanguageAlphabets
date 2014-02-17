@@ -18,6 +18,10 @@ import           NLP.Scoring.SimpleUnigram
 
 
 -- | Each parsed line gives a set of characters, or tells us a score.
+--
+-- TODO add @LPimport@ which starts a recursive import (note: start by storing
+-- the hash or whatever of the file to be imported so that we can comment on
+-- circular imports)
 
 data ParsedLine
   = PLset ByteString [InternedMultiChar]
