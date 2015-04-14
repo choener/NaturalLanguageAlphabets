@@ -25,19 +25,18 @@ extra-source-files:
   scoring/simpleunigram.txt
 
 library
-  build-depends:
-    base                  >3 && <5  ,
-    attoparsec            >= 0.10   ,
-    bytestring            >= 0.10.4 ,
-    deepseq               >= 1.3    ,
-    file-embed            >= 0.0.6  ,
-    hashable              >= 1.2    ,
-    hashtables            >= 1.1    ,
-    intern                >= 0.9    ,
-    stringable            >= 0.1.2  ,
-    system-filepath       >= 0.4.9  ,
-    text                  >= 0.11   ,
-    unordered-containers  >= 0.2.3
+  build-depends: base                  >  4.7     && < 4.9
+               , attoparsec            >= 0.10    && < 0.13
+               , bytestring            >= 0.10.4
+               , deepseq               >= 1.3
+               , file-embed            >= 0.0.6   && < 0.0.9
+               , hashable              >= 1.2
+               , hashtables            >= 1.1
+               , intern                >= 0.9
+               , stringable            >= 0.1.2
+               , system-filepath       >= 0.4.9
+               , text                  >= 0.11
+               , unordered-containers  >= 0.2.3
 
   exposed-modules:
     NLP.Alphabet.MultiChar
@@ -46,6 +45,7 @@ library
     NLP.Scoring.SimpleUnigram.Import
 
   ghc-options:
+    -O2 -funbox-strict-fields
 
 source-repository head
   type: git

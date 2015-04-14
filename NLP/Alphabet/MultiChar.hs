@@ -45,17 +45,23 @@ instance Read MultiChar where
 
 instance Hashable MultiChar where
   hashWithSalt salt (MultiChar s@(BS.SBS sbs)) = hashByteArrayWithSalt sbs 0 (BS.length s) salt
+  {-# Inline hashWithSalt #-}
 
 instance IsString MultiChar where
   fromString = MultiChar . S.fromString
+  {-# Inline fromString #-}
 
 instance Stringable MultiChar where
   toString   = T.unpack . T.decodeUtf8 . BS.fromShort . unMultiChar
   fromString = MultiChar . BS.toShort . T.encodeUtf8 . T.pack
   length     = BS.length . unMultiChar
+  {-# Inline toString #-}
+  {-# Inline fromString #-}
+  {-# Inline length #-}
 
 instance NFData MultiChar where
   rnf = rnf . unMultiChar
+  {-# Inline rnf #-}
 
 
 
@@ -68,18 +74,22 @@ data InternedMultiChar = InternedMultiChar
 
 instance IsString InternedMultiChar where
   fromString = intern . S.fromString
+  {-# Inline fromString #-}
 
 instance Eq InternedMultiChar where
   (==) = (==) `on` internedMultiCharId
+  {-# Inline (==) #-}
 
 instance Ord InternedMultiChar where
   compare = compare `on` internedMultiCharId
+  {-# Inline compare #-}
 
 instance Show InternedMultiChar where
   showsPrec d (InternedMultiChar _ mc) = showsPrec d mc
 
 instance Hashable InternedMultiChar where
   hashWithSalt salt = hashWithSalt salt . internedMultiCharId
+  {-# Inline hashWithSalt #-}
 
 instance Interned InternedMultiChar where
   type Uninterned InternedMultiChar = MultiChar
@@ -87,6 +97,9 @@ instance Interned InternedMultiChar where
   describe = DMC
   identify = InternedMultiChar
   cache = imcCache
+  {-# Inline describe #-}
+  {-# Inline identify #-}
+  {-# Inline cache #-}
 
 imcCache :: Cache InternedMultiChar
 imcCache = mkCache
@@ -96,7 +109,11 @@ instance Stringable InternedMultiChar where
   toString   = toString . uninternMultiChar
   fromString = intern . fromString
   length     = Data.Stringable.length . uninternMultiChar
+  {-# Inline toString #-}
+  {-# Inline fromString #-}
+  {-# Inline length #-}
 
 instance NFData InternedMultiChar where
   rnf (InternedMultiChar i c) = rnf i `seq` rnf c
+  {-# Inline rnf #-}
 
