@@ -1,9 +1,9 @@
 name:           NaturalLanguageAlphabets
-version:        0.0.0.2
+version:        0.0.0.3
 author:         Christian Hoener zu Siederdissen
-maintainer:     choener@tbi.univie.ac.at
-homepage:       http://www.tbi.univie.ac.at/~choener/
-copyright:      Christian Hoener zu Siederdissen, 2014
+maintainer:     choener@bioinf.uni-leipzig.de
+homepage:       http://www.bioinf.uni-leipzig.de/~choener/
+copyright:      Christian Hoener zu Siederdissen, 2014-2015
 category:       Natural Language Processing
 synopsis:       Alphabet and word representations
 license:        BSD3
