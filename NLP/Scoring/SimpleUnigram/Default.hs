@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 
 module NLP.Scoring.SimpleUnigram.Default where
 

@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 
 -- | This module defines a simple scoring scheme based on pairs of unigrams.
 

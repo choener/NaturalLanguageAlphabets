@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 
 module NLP.Scoring.SimpleUnigram.Import where
 

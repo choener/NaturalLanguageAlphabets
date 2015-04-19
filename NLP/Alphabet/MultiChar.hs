@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | An alphabet, where each character is a short bytestring.
 --
@@ -33,6 +31,14 @@ internMultiChar = uninternMultiChar . intern
 
 -- | Wrap a short bytestring. Read and Show instances behave like for normal
 -- strings.
+--
+-- TODO rewrite so that hashes are actually stored in the @data ctor@. Will
+-- need smart constructur that calculates the hash ...
+--
+-- @
+-- data MultiChar
+--  = MultiChar { getHash :: !Int , getMultiChar :: !BS.ShortByteString }
+-- @
 
 newtype MultiChar = MultiChar { unMultiChar :: BS.ShortByteString }
   deriving (Eq,Ord)
