@@ -4,9 +4,6 @@
 -- Due to the overhead this incurs, we use 'ShortByteString's internally. We
 -- also provide an 'Interned' instance to further reduce overhead using
 -- hash-consing.
---
--- TODO we'd like to use the @stringable@ library but it depends on
--- @system-filepath@ which is not yet compatible with @text>=1@.
 
 module NLP.Alphabet.MultiChar where
 
@@ -21,6 +18,7 @@ import qualified Data.ByteString.Short.Internal as BS
 import qualified Data.String as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import           GHC.Generics
 
 
 
@@ -40,8 +38,8 @@ internMultiChar = uninternMultiChar . intern
 --  = MultiChar { getHash :: !Int , getMultiChar :: !BS.ShortByteString }
 -- @
 
-newtype MultiChar = MultiChar { unMultiChar :: BS.ShortByteString }
-  deriving (Eq,Ord)
+newtype MultiChar = MultiChar { getMultiChar :: BS.ShortByteString }
+  deriving (Eq,Ord,Generic)
 
 instance Show MultiChar where
   showsPrec p (MultiChar ps) r = showsPrec p ps r
@@ -49,24 +47,22 @@ instance Show MultiChar where
 instance Read MultiChar where
   readsPrec p str = [ (MultiChar x, y) | (x,y) <- readsPrec p str ]
 
-instance Hashable MultiChar where
-  hashWithSalt salt (MultiChar s@(BS.SBS sbs)) = hashByteArrayWithSalt sbs 0 (BS.length s) salt
-  {-# Inline hashWithSalt #-}
+instance Hashable MultiChar
 
 instance IsString MultiChar where
   fromString = MultiChar . S.fromString
   {-# Inline fromString #-}
 
 instance Stringable MultiChar where
-  toString   = T.unpack . T.decodeUtf8 . BS.fromShort . unMultiChar
+  toString   = T.unpack . T.decodeUtf8 . BS.fromShort . getMultiChar
   fromString = MultiChar . BS.toShort . T.encodeUtf8 . T.pack
-  length     = BS.length . unMultiChar
+  length     = BS.length . getMultiChar
   {-# Inline toString #-}
   {-# Inline fromString #-}
   {-# Inline length #-}
 
 instance NFData MultiChar where
-  rnf = rnf . unMultiChar
+  rnf = rnf . getMultiChar
   {-# Inline rnf #-}
 
 
@@ -95,7 +91,9 @@ instance Show InternedMultiChar where
 
 instance Hashable InternedMultiChar where
   hashWithSalt salt = hashWithSalt salt . internedMultiCharId
+  hash              = hash . internedMultiCharId
   {-# Inline hashWithSalt #-}
+  {-# Inline hash         #-}
 
 instance Interned InternedMultiChar where
   type Uninterned InternedMultiChar = MultiChar

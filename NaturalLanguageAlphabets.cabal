@@ -49,6 +49,7 @@ library
 
   default-extensions: BangPatterns
                     , GeneralizedNewtypeDeriving
+                    , DeriveGeneric
                     , OverloadedStrings
                     , RecordWildCards
                     , TemplateHaskell
