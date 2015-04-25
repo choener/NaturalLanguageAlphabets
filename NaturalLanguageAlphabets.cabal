@@ -24,6 +24,16 @@ extra-source-files:
   changelog
   scoring/simpleunigram.txt
 
+flag benchmark
+  description:  build the benchmark
+  default:      False
+  manual:       True
+
+flag llvm
+  description:  build the benchmark using LLVM
+  default:      False
+  manual:       True
+
 library
   build-depends: base                  >  4.7     && < 4.9
                , array                 >= 0.5     && < 0.6
@@ -54,16 +64,53 @@ library
     Haskell2010
 
   default-extensions: BangPatterns
-                    , GeneralizedNewtypeDeriving
                     , DeriveGeneric
+                    , GeneralizedNewtypeDeriving
+                    , MultiParamTypeClasses
                     , OverloadedStrings
                     , RecordWildCards
                     , TemplateHaskell
                     , TypeFamilies
-                    , MultiParamTypeClasses
 
   ghc-options:
     -O2 -funbox-strict-fields
+
+benchmark BenchmarkNLA
+--  if flag(benchmark)
+--    buildable: True
+    build-depends: base
+                 , criterion                >= 1.0.2  && < 1.1.1
+                 , deepseq
+                 , hashtables
+                 , mwc-random               >= 0.13   && < 0.14
+                 , NaturalLanguageAlphabets
+                 , unordered-containers
+                 , vector
+                 , random                   >= 1.0    && < 1.2
+                 , containers
+--  else
+--    buildable: False
+  hs-source-dirs:
+    src
+  main-is:
+    Benchmark.hs
+  type:
+    exitcode-stdio-1.0
+  default-language:
+    Haskell2010
+  default-extensions: BangPatterns
+                    , ScopedTypeVariables
+  ghc-options:
+    -O2
+    -rtsopts
+    -funbox-strict-fields
+    -funfolding-use-threshold1000
+    -funfolding-keeness-factor1000
+  if flag(llvm)
+    ghc-options:
+      -fllvm
+      -optlo-O3 -optlo-std-compile-opts
+      -fllvm-tbaa
 
 source-repository head
   type: git
