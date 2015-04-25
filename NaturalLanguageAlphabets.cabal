@@ -26,7 +26,9 @@ extra-source-files:
 
 library
   build-depends: base                  >  4.7     && < 4.9
+               , array                 >= 0.5     && < 0.6
                , attoparsec            >= 0.10    && < 0.13
+               , bimaps                >= 0.0.0   && < 0.0.1
                , bytestring            >= 0.10.4
                , deepseq               >= 1.3     && < 1.5
                , file-embed            >= 0.0.6   && < 0.0.9
@@ -37,13 +39,13 @@ library
                , system-filepath       >= 0.4.9   && < 0.5
                , text                  >= 0.11    && < 1.3
                , unordered-containers  >= 0.2.3   && < 0.3
-               , array                 >= 0.5     && < 0.6
-               , bimaps                >= 0.0.0   && < 0.0.1
+               , vector                >= 0.10    && < 0.11
+               , vector-th-unbox       >= 0.2     && < 0.3
 
   exposed-modules:
-    NLP.Alphabet.MultiChar
     NLP.Alphabet.IMMC
     NLP.Alphabet.IMMC.Internal
+    NLP.Alphabet.MultiChar
     NLP.Scoring.SimpleUnigram
     NLP.Scoring.SimpleUnigram.Default
     NLP.Scoring.SimpleUnigram.Import
@@ -58,6 +60,7 @@ library
                     , RecordWildCards
                     , TemplateHaskell
                     , TypeFamilies
+                    , MultiParamTypeClasses
 
   ghc-options:
     -O2 -funbox-strict-fields

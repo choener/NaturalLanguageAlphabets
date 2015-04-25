@@ -12,6 +12,7 @@ import Data.Bijection.Hash (Bimap,empty,lookupL,lookupR,size,insert)
 import NLP.Alphabet.MultiChar
 
 
+
 immcBimap :: IORef (Bimap InternedMultiChar Int)
 immcBimap = unsafePerformIO $ newIORef empty
 {-# NoInline immcBimap #-}

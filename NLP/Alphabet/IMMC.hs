@@ -5,12 +5,13 @@ module NLP.Alphabet.IMMC where
 
 import           Control.DeepSeq (NFData(..))
 import           Data.Hashable
-import           Data.String as IS
 import           Data.Stringable as SA
+import           Data.String as IS
+import           Data.Vector.Unboxed.Deriving
 import           GHC.Generics
+import qualified Data.ByteString.Short as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Data.ByteString.Short as BS
 
 import           NLP.Alphabet.IMMC.Internal
 
@@ -22,6 +23,11 @@ import           NLP.Alphabet.IMMC.Internal
 
 newtype IMMC = IMMC { getIMMC :: Int }
   deriving (Eq,Generic)
+
+derivingUnbox "IMMC"
+  [t| IMMC -> Int |]
+  [|  getIMMC     |]
+  [|  IMMC        |]
 
 instance Ord IMMC where
   IMMC l `compare` IMMC r = immcBimapLookupInt l `compare` immcBimapLookupInt r
@@ -44,9 +50,9 @@ instance Read IMMC where
 instance Hashable IMMC
 
 instance Stringable IMMC where
-  toString   = toString . immcBimapLookupInt . getIMMC
-  fromString = immc . SA.fromString
-  length     = SA.length . immcBimapLookupInt . getIMMC
+  toString   (IMMC i) = seq i . toString $ immcBimapLookupInt i
+  fromString          = immc . SA.fromString
+  length     (IMMC i) = seq i . SA.length $ immcBimapLookupInt i
   {-# Inline toString #-}
   {-# Inline fromString #-}
   {-# Inline length #-}
