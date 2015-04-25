@@ -34,7 +34,7 @@ immcBimapAdd k = unsafeDupablePerformIO $ do
 -- assumption.
 
 immcBimapLookupInt :: Int -> InternedMultiChar
-immcBimapLookupInt r = unsafeDupablePerformIO $ do
+immcBimapLookupInt r = seq r . unsafeDupablePerformIO $ do    -- need to @seq r@, otherwise the lookup will sometimes find Nothing
   m <- readIORef immcBimap
   case lookupR m r of
     Just l  -> return l

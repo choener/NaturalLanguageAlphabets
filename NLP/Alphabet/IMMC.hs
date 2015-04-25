@@ -40,7 +40,7 @@ instance IsString IMMC where
   {-# Inline fromString #-}
 
 instance Show IMMC where
-  showsPrec p (IMMC i) r = seq i $ showsPrec p (immcBimapLookupInt i) r
+  showsPrec p (IMMC i) r = showsPrec p (immcBimapLookupInt i) r
   {-# Inline showsPrec #-}
 
 instance Read IMMC where
@@ -50,9 +50,9 @@ instance Read IMMC where
 instance Hashable IMMC
 
 instance Stringable IMMC where
-  toString   (IMMC i) = seq i . toString $ immcBimapLookupInt i
-  fromString          = immc . SA.fromString
-  length     (IMMC i) = seq i . SA.length $ immcBimapLookupInt i
+  toString   = toString . immcBimapLookupInt . getIMMC
+  fromString = immc . SA.fromString
+  length     = SA.length . immcBimapLookupInt . getIMMC
   {-# Inline toString #-}
   {-# Inline fromString #-}
   {-# Inline length #-}
