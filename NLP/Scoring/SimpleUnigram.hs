@@ -7,7 +7,7 @@ import           Data.HashTable.IO (BasicHashTable)
 import qualified Data.HashTable.IO as H
 import           System.IO.Unsafe (unsafePerformIO)
 
-import           NLP.Alphabet.MultiChar
+import           NLP.Alphabet.IMMC
 
 
 
@@ -16,7 +16,7 @@ import           NLP.Alphabet.MultiChar
 -- database, then return the default matching 'defMatch' score if @x==y@,
 -- otherwise return the default mismatch 'defMismatch' score.
 
-scoreUnigram :: SimpleScoring -> InternedMultiChar -> InternedMultiChar -> Double
+scoreUnigram :: SimpleScoring -> IMMC -> IMMC -> Double
 scoreUnigram SimpleScoring {..} x y =
   maybe (if x==y then defMatch else defMismatch)
   id
@@ -26,7 +26,7 @@ scoreUnigram SimpleScoring {..} x y =
 -- | Collect the hashtable and scalar values for simple scoring.
 
 data SimpleScoring = SimpleScoring
-  { simpleScore  :: !(BasicHashTable (InternedMultiChar,InternedMultiChar) Double)
+  { simpleScore  :: !(BasicHashTable (IMMC,IMMC) Double)
   , gapScore     :: !Double
   , gapOpen      :: !Double
   , gapExtend    :: !Double

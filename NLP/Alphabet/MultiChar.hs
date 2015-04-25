@@ -11,6 +11,7 @@ import           Control.DeepSeq (NFData(..))
 import           Data.Function (on)
 import           Data.Hashable
 import           Data.Interned
+import           Data.Interned.Internal (getCache)
 import           Data.Stringable
 import           Data.String (IsString)
 import qualified Data.ByteString.Short as BS
@@ -19,8 +20,13 @@ import qualified Data.String as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           GHC.Generics
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Array as A
 
 
+
+-- * 'MultiChar's capture UTF characters that are encoded using one or more
+-- symbols.
 
 -- | Interns a 'MultiChar' character.
 
@@ -29,14 +35,6 @@ internMultiChar = uninternMultiChar . intern
 
 -- | Wrap a short bytestring. Read and Show instances behave like for normal
 -- strings.
---
--- TODO rewrite so that hashes are actually stored in the @data ctor@. Will
--- need smart constructur that calculates the hash ...
---
--- @
--- data MultiChar
---  = MultiChar { getHash :: !Int , getMultiChar :: !BS.ShortByteString }
--- @
 
 newtype MultiChar = MultiChar { getMultiChar :: BS.ShortByteString }
   deriving (Eq,Ord,Generic)
@@ -120,4 +118,6 @@ instance Stringable InternedMultiChar where
 instance NFData InternedMultiChar where
   rnf (InternedMultiChar i c) = rnf i `seq` rnf c
   {-# Inline rnf #-}
+
+
 

@@ -11,7 +11,7 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.HashTable.IO as H
 import           System.IO.Unsafe (unsafePerformIO)
 
-import           NLP.Alphabet.MultiChar
+import           NLP.Alphabet.IMMC
 import           NLP.Scoring.SimpleUnigram
 
 
@@ -23,9 +23,9 @@ import           NLP.Scoring.SimpleUnigram
 -- circular imports)
 
 data ParsedLine
-  = PLset ByteString [InternedMultiChar]
+  = PLset ByteString [IMMC]
   | PLeq ByteString Double
-  | PLeqset ByteString [InternedMultiChar]
+  | PLeqset ByteString [IMMC]
   | PLinset ByteString ByteString Double
   | PLgap Double
   | PLgapopen Double
