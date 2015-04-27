@@ -65,6 +65,7 @@ library
 
   default-extensions: BangPatterns
                     , DeriveGeneric
+                    , DeriveDataTypeable
                     , GeneralizedNewtypeDeriving
                     , MultiParamTypeClasses
                     , OverloadedStrings

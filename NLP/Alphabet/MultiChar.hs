@@ -22,6 +22,8 @@ import qualified Data.Text.Encoding as T
 import           GHC.Generics
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Array as A
+import           Data.Typeable (Typeable)
+import           Data.Data (Data)
 
 
 
@@ -32,18 +34,21 @@ import qualified Data.Array as A
 
 internMultiChar :: MultiChar -> MultiChar
 internMultiChar = uninternMultiChar . intern
+{-# Inline internMultiChar #-}
 
 -- | Wrap a short bytestring. Read and Show instances behave like for normal
 -- strings.
 
-newtype MultiChar = MultiChar { getMultiChar :: BS.ShortByteString }
-  deriving (Eq,Ord,Generic)
+newtype MultiChar = MultiChar { getMultiChar :: T.Text }
+  deriving (Eq,Ord,Generic,Data,Typeable)
 
 instance Show MultiChar where
   showsPrec p (MultiChar ps) r = showsPrec p ps r
+  {-# Inline showsPrec #-}
 
 instance Read MultiChar where
   readsPrec p str = [ (MultiChar x, y) | (x,y) <- readsPrec p str ]
+  {-# Inline readsPrec #-}
 
 instance Hashable MultiChar
 
@@ -52,12 +57,16 @@ instance IsString MultiChar where
   {-# Inline fromString #-}
 
 instance Stringable MultiChar where
-  toString   = T.unpack . T.decodeUtf8 . BS.fromShort . getMultiChar
-  fromString = MultiChar . BS.toShort . T.encodeUtf8 . T.pack
-  length     = BS.length . getMultiChar
-  {-# Inline toString #-}
+  toString   = T.unpack . getMultiChar
+  fromString = MultiChar . T.pack
+  length     = T.length . getMultiChar
+  fromText   = MultiChar
+  toText     = getMultiChar
+  {-# Inline toString   #-}
   {-# Inline fromString #-}
-  {-# Inline length #-}
+  {-# Inline length     #-}
+  {-# Inline fromText   #-}
+  {-# Inline toText     #-}
 
 instance NFData MultiChar where
   rnf = rnf . getMultiChar
@@ -67,10 +76,15 @@ instance NFData MultiChar where
 
 -- * Interned
 
+-- | Interned 'MultiChar'.
+--
+-- TODO Check 'Ord' instance. We @compare `on` uninternMultiChar@.
+
 data InternedMultiChar = InternedMultiChar
   { internedMultiCharId :: {-# UNPACK #-} !Id
   , uninternMultiChar   :: {-# UNPACK #-} !MultiChar
   }
+  deriving (Generic,Data,Typeable)
 
 instance IsString InternedMultiChar where
   fromString = intern . S.fromString
@@ -81,11 +95,16 @@ instance Eq InternedMultiChar where
   {-# Inline (==) #-}
 
 instance Ord InternedMultiChar where
-  compare = compare `on` internedMultiCharId
+  compare = compare `on` uninternMultiChar -- internedMultiCharId
   {-# Inline compare #-}
+
+instance Read InternedMultiChar where
+  readsPrec p str = [ (intern x, y) | (x,y) <- readsPrec p str ]
+  {-# Inline readsPrec #-}
 
 instance Show InternedMultiChar where
   showsPrec d (InternedMultiChar _ mc) = showsPrec d mc
+  {-# Inline showsPrec #-}
 
 instance Hashable InternedMultiChar where
   hashWithSalt salt = hashWithSalt salt . internedMultiCharId
@@ -98,10 +117,10 @@ instance Interned InternedMultiChar where
   newtype Description InternedMultiChar = DMC MultiChar deriving (Eq,Hashable)
   describe = DMC
   identify = InternedMultiChar
-  cache = imcCache
+  cache    = imcCache
   {-# Inline describe #-}
   {-# Inline identify #-}
-  {-# Inline cache #-}
+  {-# Inline cache    #-}
 
 imcCache :: Cache InternedMultiChar
 imcCache = mkCache
@@ -111,13 +130,15 @@ instance Stringable InternedMultiChar where
   toString   = toString . uninternMultiChar
   fromString = intern . fromString
   length     = Data.Stringable.length . uninternMultiChar
-  {-# Inline toString #-}
+  toText     = toText . uninternMultiChar
+  fromText   = intern . fromText
+  {-# Inline toString   #-}
   {-# Inline fromString #-}
-  {-# Inline length #-}
+  {-# Inline length     #-}
+  {-# Inline toText     #-}
+  {-# Inline fromText   #-}
 
 instance NFData InternedMultiChar where
   rnf (InternedMultiChar i c) = rnf i `seq` rnf c
   {-# Inline rnf #-}
-
-
 

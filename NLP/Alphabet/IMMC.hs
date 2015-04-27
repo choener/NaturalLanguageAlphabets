@@ -31,6 +31,7 @@ derivingUnbox "IMMC"
 
 instance Ord IMMC where
   IMMC l `compare` IMMC r = immcBimapLookupInt l `compare` immcBimapLookupInt r
+  {-# Inline compare #-}
 
 immc s = IMMC $! immcBimapAdd s
 {-# Inline immc #-}
@@ -53,9 +54,13 @@ instance Stringable IMMC where
   toString   = toString . immcBimapLookupInt . getIMMC
   fromString = immc . SA.fromString
   length     = SA.length . immcBimapLookupInt . getIMMC
-  {-# Inline toString #-}
+  toText     = toText . immcBimapLookupInt . getIMMC
+  fromText   = immc . fromText
+  {-# Inline toString   #-}
   {-# Inline fromString #-}
-  {-# Inline length #-}
+  {-# Inline length     #-}
+  {-# Inline toText     #-}
+  {-# Inline fromText   #-}
 
 instance NFData IMMC where
   rnf = rnf . getIMMC
