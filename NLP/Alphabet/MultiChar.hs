@@ -115,7 +115,7 @@ instance Hashable InternedMultiChar where
 instance Interned InternedMultiChar where
   type Uninterned InternedMultiChar = MultiChar
   newtype Description InternedMultiChar = DMC MultiChar deriving (Eq,Hashable)
-  describe = DMC
+  describe = DMC -- . MultiChar . T.copy . getMultiChar -- @DMC@ alone is type-correct. With 'T.copy' we make sure not to keep long @Text@s. TODO benchmark!
   identify = InternedMultiChar
   cache    = imcCache
   {-# Inline describe #-}

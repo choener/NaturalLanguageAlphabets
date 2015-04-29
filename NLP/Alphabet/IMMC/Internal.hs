@@ -1,6 +1,10 @@
 
 -- | This module keeps a persistent @bimap@ between @InternedMultiChar@s
 -- and @Int@s
+--
+-- TODO make this a bimap @Text <-> Vector@. Compare performance when
+-- printing backtracking results. (Do this after the Builder-based
+-- backtracking is online)
 
 module NLP.Alphabet.IMMC.Internal where
 

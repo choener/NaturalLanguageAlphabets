@@ -14,6 +14,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 import           NLP.Alphabet.IMMC.Internal
+import           NLP.Alphabet.MultiChar (InternedMultiChar)
 
 
 
@@ -33,6 +34,7 @@ instance Ord IMMC where
   IMMC l `compare` IMMC r = immcBimapLookupInt l `compare` immcBimapLookupInt r
   {-# Inline compare #-}
 
+immc :: InternedMultiChar -> IMMC
 immc s = IMMC $! immcBimapAdd s
 {-# Inline immc #-}
 
