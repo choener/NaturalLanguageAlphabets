@@ -2,14 +2,19 @@
 module NLP.Scoring.SimpleUnigram.Import where
 
 import           Control.Applicative
-import           Data.ByteString.Char8 (ByteString)
+--import           Data.ByteString.Char8 (ByteString)
 import           Data.HashTable.IO (BasicHashTable)
 import           Data.Stringable
-import qualified Data.Attoparsec.ByteString as AB
-import qualified Data.Attoparsec.ByteString.Char8 as AB hiding (takeWhile1,skipWhile)
-import qualified Data.ByteString.Char8 as B
+--import qualified Data.Attoparsec.ByteString as AB
+--import qualified Data.Attoparsec.ByteString.Char8 as AB hiding (takeWhile1,skipWhile)
+--import qualified Data.ByteString.Char8 as B
 import qualified Data.HashTable.IO as H
 import           System.IO.Unsafe (unsafePerformIO)
+
+import qualified Data.Attoparsec.Text as AT
+import           Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 import           NLP.Alphabet.IMMC
 import           NLP.Scoring.SimpleUnigram
@@ -23,24 +28,25 @@ import           NLP.Scoring.SimpleUnigram
 -- circular imports)
 
 data ParsedLine
-  = PLset ByteString [IMMC]
-  | PLeq ByteString Double
-  | PLeqset ByteString [IMMC]
-  | PLinset ByteString ByteString Double
+  = PLset Text [IMMC]
+  | PLeq Text Double
+  | PLeqset Text [IMMC]
+  | PLinset Text Text Double
   | PLgap Double
   | PLgapopen Double
   | PLgapextend Double
   | PLdefmatch Double
   | PLdefmismatch Double
-  | PLcomment ByteString
+  | PLcomment Text
   deriving (Show,Eq,Ord)
 
 -- | Here we simple parse individual lines.
 
-parseLine l = case AB.parseOnly (go <* AB.endOfInput) l of
+parseLine :: Text -> ParsedLine
+parseLine l = case AT.parseOnly (go <* AT.endOfInput) l of
                 Left  err -> error $ err ++ " " ++ show l
                 Right p   -> p
-  where go =   PLset         <$ "Set"       <*> wd <*> mc `AB.sepBy1` AB.skipSpace -- AB.skipWhile AB.isHorizontalSpace
+  where go =   PLset         <$ "Set"       <*> wd <*> mc `AT.sepBy1` AT.skipSpace -- AB.skipWhile AB.isHorizontalSpace
            <|> PLeq          <$ "Eq"        <*> wd <*> nm
            <|> PLinset       <$ "InSet"     <*> wd <*> wd <*> nm
            <|> PLgap         <$ "Gap"       <*> nm
@@ -48,22 +54,22 @@ parseLine l = case AB.parseOnly (go <* AB.endOfInput) l of
            <|> PLgapextend   <$ "GapExtend" <*> nm
            <|> PLdefmatch    <$ "Match"     <*> nm
            <|> PLdefmismatch <$ "Mismatch"  <*> nm
-           <|> PLeqset       <$ "EqSet"     <*> wd <*> mc `AB.sepBy1` AB.skipSpace
-           <|> PLcomment     <$ "--"        <*> AB.takeByteString
-        wd = AB.skipSpace *> AB.takeWhile1 (not . AB.isHorizontalSpace)
-        mc = fromByteString <$> wd
-        nm = AB.skipSpace *> AB.double
+           <|> PLeqset       <$ "EqSet"     <*> wd <*> mc `AT.sepBy1` AT.skipSpace
+           <|> PLcomment     <$ "--"        <*> AT.takeText
+        wd = AT.skipSpace *> AT.takeWhile1 (not . AT.isHorizontalSpace)
+        mc = fromText <$> wd
+        nm = AT.skipSpace *> AT.double
 
 -- | Parses a bytestring to create a simple scoring. We don't do much error
 -- checking, many of the bindings below will easily fail.
 --
 -- TODO obviously: implement error-checking
 
-genSimpleScoring :: ByteString -> SimpleScoring
+genSimpleScoring :: Text -> SimpleScoring
 genSimpleScoring l = SimpleScoring t g go ge dm di
   where
     t    = unsafePerformIO $ H.fromListWithSizeHint (Prelude.length ys) ys
-    ls   = B.lines l
+    ls   = T.lines l
     xs   = map parseLine ls
     ys   = concatMap genPairs $ iss ++ eqs
     sets = [s  | s@(PLset _ _)     <- xs]
@@ -97,5 +103,5 @@ genSimpleScoring l = SimpleScoring t g go ge dm di
 
 -- | parse a simple scoring file.
 
-simpleScoreFromFile f = B.readFile f >>= return . genSimpleScoring
+simpleScoreFromFile f = T.readFile f >>= return . genSimpleScoring
 

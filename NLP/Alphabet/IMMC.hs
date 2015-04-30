@@ -43,7 +43,7 @@ instance IsString IMMC where
   {-# Inline fromString #-}
 
 instance Show IMMC where
-  showsPrec p (IMMC i) r = showsPrec p (immcBimapLookupInt i) r
+  showsPrec p i r = showsPrec p (toString i) r
   {-# Inline showsPrec #-}
 
 instance Read IMMC where

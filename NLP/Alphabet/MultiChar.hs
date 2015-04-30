@@ -43,7 +43,7 @@ newtype MultiChar = MultiChar { getMultiChar :: T.Text }
   deriving (Eq,Ord,Generic,Data,Typeable)
 
 instance Show MultiChar where
-  showsPrec p (MultiChar ps) r = showsPrec p ps r
+  showsPrec p (MultiChar mc) r = showsPrec p (toString mc) r
   {-# Inline showsPrec #-}
 
 instance Read MultiChar where

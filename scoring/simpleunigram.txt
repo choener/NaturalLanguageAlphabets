@@ -1,3 +1,5 @@
+-- !!! THIS FILE ASSUMES UTF-8 ENCODING !!!
+--
 -- These are all vowels, but all 'a's are equivalent with respect to this
 -- scoring. It is only required to give 'EqSet's if you have more than one
 -- equivalent character. In this EqSet, everything gets a score of 'Eq Vowel'
