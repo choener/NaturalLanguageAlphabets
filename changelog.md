@@ -2,6 +2,7 @@
 -------
 
 - cleanup for GHC 7.10
+- travis-ci integration
 
 0.0.0.2
 -------
