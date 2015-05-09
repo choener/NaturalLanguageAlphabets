@@ -1,7 +1,6 @@
-Natural Language Alphabets
-==========================
-
 [![Build Status](https://travis-ci.org/choener/NaturalLanguageAlphabets.svg?branch=master)](https://travis-ci.org/choener/NaturalLanguageAlphabets)
+
+# Natural Language Alphabets
 
 Efficient, alphabet symbols. The symbols are interned, and hashed. This is
 quite useful for k-gram scoring, where we have different sets of symbols with
