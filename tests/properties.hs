@@ -1,14 +1,15 @@
 
 module Main where
 
-import           Test.Framework.Providers.QuickCheck2
-import           Test.Framework.TH
+import           Control.Applicative
 import           Data.String
 import           Data.Stringable hiding (fromString)
+import           Debug.Trace
+import qualified Data.Aeson as A
 import qualified Data.Binary as B
 import qualified Data.Serialize as S
-import qualified Data.Aeson as A
-import           Debug.Trace
+import           Test.Framework.Providers.QuickCheck2
+import           Test.Framework.TH
 
 import           NLP.Alphabet.IMMC
 
