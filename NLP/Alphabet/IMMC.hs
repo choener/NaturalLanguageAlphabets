@@ -3,20 +3,21 @@
 
 module NLP.Alphabet.IMMC where
 
+import           Control.Applicative
 import           Control.DeepSeq (NFData(..))
+import           Data.Aeson as A
+import           Data.Binary      as DB
 import           Data.Hashable
+import           Data.Serialize   as DS
+import           Data.Serialize.Text
 import           Data.Stringable as SA
 import           Data.String as IS
+import           Data.Text.Binary
 import           Data.Vector.Unboxed.Deriving
 import           GHC.Generics
 import qualified Data.ByteString.Short as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import           Data.Binary      as DB
-import           Data.Text.Binary
-import           Data.Serialize   as DS
-import           Data.Serialize.Text
-import           Data.Aeson as A
 
 import           NLP.Alphabet.IMMC.Internal
 import           NLP.Alphabet.MultiChar (InternedMultiChar)
