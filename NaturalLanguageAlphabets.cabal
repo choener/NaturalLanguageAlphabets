@@ -1,5 +1,5 @@
 name:           NaturalLanguageAlphabets
-version:        0.0.1.0
+version:        0.0.2.0
 author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 homepage:       https://github.com/choener/NaturalLanguageAlphabets
@@ -23,6 +23,8 @@ description:
                 .
                 A very simple unigram-based scoring scheme and DSL to write
                 such schemes are also provided.
+                .
+                <https://github.com/choener/NaturalLanguageAlphabets/blob/master/README.md>
 
 
 
@@ -139,16 +141,16 @@ test-suite properties
   default-extensions: ScopedTypeVariables
                     , TemplateHaskell
   build-depends: base
+               , aeson
+               , binary
+               , cereal
+               , NaturalLanguageAlphabets
                , QuickCheck
+               , stringable
                , test-framework               >= 0.8  && < 0.9
                , test-framework-quickcheck2   >= 0.3  && < 0.4
                , test-framework-th            >= 0.2  && < 0.3
                , text
-               , NaturalLanguageAlphabets
-               , stringable
-               , binary
-               , cereal
-               , aeson
 
 
 
