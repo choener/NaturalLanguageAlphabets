@@ -1,3 +1,10 @@
+0.0.2.0
+-------
+
+- internalisation was *not* thread-safe, now it is
+- some property tests
+- scoring file suffix is now .score
+
 0.0.1.0
 -------
 

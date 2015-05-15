@@ -12,6 +12,11 @@ import           GHC.Generics
 import qualified Data.ByteString.Short as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import           Data.Binary      as DB
+import           Data.Text.Binary
+import           Data.Serialize   as DS
+import           Data.Serialize.Text
+import           Data.Aeson as A
 
 import           NLP.Alphabet.IMMC.Internal
 import           NLP.Alphabet.MultiChar (InternedMultiChar)
@@ -67,4 +72,24 @@ instance Stringable IMMC where
 instance NFData IMMC where
   rnf = rnf . getIMMC
   {-# Inline rnf #-}
+
+instance Binary IMMC where
+  put = DB.put . toText
+  get = fromText <$> DB.get
+  {-# Inline put #-}
+  {-# Inline get #-}
+
+instance Serialize IMMC where
+  put = DS.put . toText
+  get = fromText <$> DS.get
+  {-# Inline put #-}
+  {-# Inline get #-}
+
+instance FromJSON IMMC where
+  parseJSON s = fromText <$> parseJSON s
+  {-# Inline parseJSON #-}
+
+instance ToJSON IMMC where
+  toJSON = toJSON . toText
+  {-# Inline toJSON #-}
 

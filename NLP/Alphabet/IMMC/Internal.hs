@@ -26,22 +26,33 @@ immcBimap = unsafePerformIO $ newIORef empty
 -- direction.
 
 immcBimapAdd :: InternedMultiChar -> Int
+immcBimapAdd k = unsafeDupablePerformIO $ atomicModifyIORef' immcBimap $ \m ->
+  case lookupL m k of Just i  -> (m,i)
+                      Nothing -> let s = size m
+                                 in  (insert m (k,s) , s)
+{-
 immcBimapAdd k = unsafeDupablePerformIO $ do
   m <- readIORef immcBimap
   case lookupL m k of
     Just i  -> return i
     Nothing -> do let s = size m
                   atomicModifyIORef' immcBimap $ \m -> (insert m (k,s) , s)
+-}
 {-# Inline immcBimapAdd #-}
 
 -- | Lookup the @InternedMultiChar@ based on an @Int@ key. Unsafe totality
 -- assumption.
 
 immcBimapLookupInt :: Int -> InternedMultiChar
+immcBimapLookupInt r = seq r . unsafeDupablePerformIO $ atomicModifyIORef' immcBimap $ \m ->
+  case lookupR m r of Just l  -> (m,l)
+                      Nothing -> error "immcBimapLookupInt: totality assumption invalidated"
+{-
 immcBimapLookupInt r = seq r . unsafeDupablePerformIO $ do    -- need to @seq r@, otherwise the lookup will sometimes find Nothing.
   m <- readIORef immcBimap
   case lookupR m r of
     Just l  -> return l
     Nothing -> error "immcBimapLookupInt: totality assumption invalidated"
+-}
 {-# Inline immcBimapLookupInt #-}
 
