@@ -1,9 +1,5 @@
 
--- | An alphabet, where each character is a short bytestring.
---
--- Due to the overhead this incurs, we use 'ShortByteString's internally. We
--- also provide an 'Interned' instance to further reduce overhead using
--- hash-consing.
+-- | An alphabet, where each character is a short piece of @Text@.
 
 module NLP.Alphabet.MultiChar where
 
@@ -115,7 +111,7 @@ instance Hashable InternedMultiChar where
 instance Interned InternedMultiChar where
   type Uninterned InternedMultiChar = MultiChar
   newtype Description InternedMultiChar = DMC MultiChar deriving (Eq,Hashable)
-  describe = DMC -- . MultiChar . T.copy . getMultiChar -- @DMC@ alone is type-correct. With 'T.copy' we make sure not to keep long @Text@s. TODO benchmark!
+  describe = DMC . MultiChar . T.copy . getMultiChar -- @DMC@ alone is type-correct. With 'T.copy' we make sure not to keep long @Text@s. TODO benchmark!
   identify = InternedMultiChar
   cache    = imcCache
   {-# Inline describe #-}
