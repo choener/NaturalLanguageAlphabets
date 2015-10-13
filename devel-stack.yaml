@@ -6,6 +6,7 @@ resolver: lts-3.9
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
+- ../Lib-bimaps/
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
@@ -15,6 +16,7 @@ extra-deps:
 - storable-tuple-0.0.2
 - storable-record-0.0.3
 - utility-ht-0.0.11
+- vector-0.11.0.0
 - bimaps-0.0.0.2
 
 # Override default flag values for local packages and extra-deps
