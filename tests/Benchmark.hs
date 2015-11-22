@@ -35,13 +35,13 @@ main = do ( !keys , !unks , (!hmsH,!cisH,!htH) , (!hmsK,!cisK,!htK) ) <- setupEn
                     (UCHS.size hmsH) (CIS.size cisH) (-1 :: Int)
                     (UCHS.size hmsK) (CIS.size cisK) (-1 :: Int)
           defaultMain
-            [ bgroup "  100 keys" [ bench "uchs" $ whnf (\k -> UCHS.lookupDefault  0 k hmsH) (VU.head keys)
-                                  , bench " cis" $ whnf (\k -> CIS.findWithDefault 0 k cisH) (getIMMC $ VU.head keys)
-                                  , bench " htB" $ whnf (\k -> htLookup htH k)               (VU.head keys)
+            [ bgroup "  100 keys" [ bench "HashMap.Strict" $ whnf (\k -> UCHS.lookupDefault  0 k hmsH) (VU.head keys)
+                                  , bench "IntMap.Strict" $ whnf (\k -> CIS.findWithDefault 0 k cisH) (getIMMC $ VU.head keys)
+                                  , bench "HashTable" $ whnf (\k -> htLookup htH k)               (VU.head keys)
                                   ]
-            , bgroup "10000 keys" [ bench "uchs" $ whnf (\k -> UCHS.lookupDefault  0 k hmsK) (VU.head keys)
-                                  , bench " cis" $ whnf (\k -> CIS.findWithDefault 0 k cisK) (getIMMC $ VU.head keys)
-                                  , bench " htB" $ whnf (\k -> htLookup htK k)               (VU.head keys)
+            , bgroup "10000 keys" [ bench "HashMap.Strict" $ whnf (\k -> UCHS.lookupDefault  0 k hmsK) (VU.head keys)
+                                  , bench "IntMap.Strict" $ whnf (\k -> CIS.findWithDefault 0 k cisK) (getIMMC $ VU.head keys)
+                                  , bench "HashTable" $ whnf (\k -> htLookup htK k)               (VU.head keys)
                                   ]
 --            , bgroup "  100 known"   [ bench "uchsH" $ whnf (\ks -> VU.sum $ VU.map (\k -> UCHS.lookupDefault  0 k hmsH) ks) (VU.take 100 keys)
 --                                     , bench " cisH" $ whnf (\ks -> VU.sum $ VU.map (\k -> CIS.findWithDefault 0 k cisH) ks) (VU.map getIMMC $ VU.take 100 keys)
