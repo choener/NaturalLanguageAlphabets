@@ -7,16 +7,16 @@ import           Data.HashTable.IO (BasicHashTable)
 import qualified Data.HashTable.IO as H
 import           System.IO.Unsafe (unsafePerformIO)
 
-import           NLP.Alphabet.IMMC
+import           NLP.Text.BTI
 
 
 
--- | Score 'MultiChar's @x@ and @y@ based on the simple scoring system: (i)
+-- | Score 'BTI's @x@ and @y@ based on the simple scoring system: (i)
 -- lookup (x,y) and use the score if found; (ii) if (x,y) is not in the
 -- database, then return the default matching 'defMatch' score if @x==y@,
 -- otherwise return the default mismatch 'defMismatch' score.
 
-scoreUnigram :: SimpleScoring -> IMMC -> IMMC -> Double
+scoreUnigram :: SimpleScoring -> BTI -> BTI -> Double
 scoreUnigram SimpleScoring {..} x y =
   maybe (if x==y then defMatch else defMismatch)
   id
@@ -26,7 +26,7 @@ scoreUnigram SimpleScoring {..} x y =
 -- | Collect the hashtable and scalar values for simple scoring.
 
 data SimpleScoring = SimpleScoring
-  { simpleScore  :: !(BasicHashTable (IMMC,IMMC) Double)
+  { simpleScore  :: !(BasicHashTable (BTI,BTI) Double)
   , gapScore     :: !Double
   , gapOpen      :: !Double
   , gapExtend    :: !Double

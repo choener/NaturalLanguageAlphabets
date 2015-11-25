@@ -1,3 +1,9 @@
+0.1.0.0
+-------
+
+- moved IMMC to LinguisticsTypes library
+- removed MultiChar type
+
 0.0.2.0
 -------
 

@@ -1,5 +1,5 @@
 name:           NaturalLanguageAlphabets
-version:        0.0.2.0
+version:        0.1.0.0
 author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 homepage:       https://github.com/choener/NaturalLanguageAlphabets
@@ -12,19 +12,9 @@ build-type:     Simple
 stability:      experimental
 cabal-version:  >= 1.10.0
 tested-with:    GHC == 7.8.4, GHC == 7.10.2
-synopsis:       Alphabet and word representations
+synopsis:       Simple scoring schemes for word alignments
 description:
-                Provides different encoding for characters and words in natural
-                language processing. A character will often be encoded as a
-                unicode text string as we deal with multi-symbol characters.
-                .
-                Internal encoding of IMMC symbols are 0-based integers, which
-                allows for the use of unboxed containers.
-                .
-                A very simple unigram-based scoring scheme and DSL to write
-                such schemes are also provided.
-                .
-                <https://github.com/choener/NaturalLanguageAlphabets/blob/master/README.md>
+                Provides a simple scoring scheme for word alignments.
 
 
 
@@ -57,6 +47,7 @@ library
                , hashable               >= 1.2      && < 1.3
                , hashtables             >= 1.1      && < 1.3
                , intern                 >= 0.9      && < 0.10
+               , LinguisticsTypes       >= 0.0.0    && < 0.0.1
                , QuickCheck             >= 2.7      && < 2.9
                , stringable             >= 0.1.2    && < 0.2
                , system-filepath        >= 0.4.9    && < 0.5
@@ -67,9 +58,6 @@ library
                , vector-th-unbox        >= 0.2      && < 0.3
 
   exposed-modules:
-    NLP.Alphabet.IMMC
-    NLP.Alphabet.IMMC.Internal
-    NLP.Alphabet.MultiChar
     NLP.Scoring.SimpleUnigram
     NLP.Scoring.SimpleUnigram.Default
     NLP.Scoring.SimpleUnigram.Import
@@ -98,6 +86,7 @@ benchmark BenchmarkNLA
                , criterion                >= 1.0.2  && < 1.1.1
                , deepseq
                , hashtables
+               , LinguisticsTypes
                , mwc-random               >= 0.13   && < 0.14
                , NaturalLanguageAlphabets
                , random                   >= 1.0    && < 1.2
@@ -144,6 +133,7 @@ test-suite properties
                , aeson
                , binary
                , cereal
+               , LinguisticsTypes
                , NaturalLanguageAlphabets
                , QuickCheck
                , stringable

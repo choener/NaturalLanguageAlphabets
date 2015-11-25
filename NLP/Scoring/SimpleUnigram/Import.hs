@@ -2,21 +2,17 @@
 module NLP.Scoring.SimpleUnigram.Import where
 
 import           Control.Applicative
---import           Data.ByteString.Char8 (ByteString)
 import           Data.HashTable.IO (BasicHashTable)
 import           Data.Stringable
---import qualified Data.Attoparsec.ByteString as AB
---import qualified Data.Attoparsec.ByteString.Char8 as AB hiding (takeWhile1,skipWhile)
---import qualified Data.ByteString.Char8 as B
-import qualified Data.HashTable.IO as H
-import           System.IO.Unsafe (unsafePerformIO)
-
-import qualified Data.Attoparsec.Text as AT
 import           Data.Text (Text)
+import qualified Data.Attoparsec.Text as AT
+import qualified Data.HashTable.IO as H
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import           System.IO.Unsafe (unsafePerformIO)
 
-import           NLP.Alphabet.IMMC
+import           NLP.Text.BTI
+
 import           NLP.Scoring.SimpleUnigram
 
 
@@ -28,9 +24,9 @@ import           NLP.Scoring.SimpleUnigram
 -- circular imports)
 
 data ParsedLine
-  = PLset Text [IMMC]
+  = PLset Text [BTI]
   | PLeq Text Double
-  | PLeqset Text [IMMC]
+  | PLeqset Text [BTI]
   | PLinset Text Text Double
   | PLgap Double
   | PLgapopen Double

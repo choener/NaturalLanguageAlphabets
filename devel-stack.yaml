@@ -6,12 +6,15 @@ resolver: lts-3.15
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
+- location: ../Lib-LinguisticsTypes/
+  extra-dep: true
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
 - bimaps-0.0.0.4
 - cereal-text-0.1.0.1
 - intern-0.9.1.4
+- LinguisticTypes-0.0.0.1
 - storable-record-0.0.3
 - storable-tuple-0.0.2
 - utility-ht-0.0.11
