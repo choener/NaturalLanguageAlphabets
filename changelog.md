@@ -1,8 +1,11 @@
 0.1.0.0
 -------
 
-- moved IMMC to LinguisticsTypes library
+- moved IMMC to LinguisticsTypes library and renamed to BTI
 - removed MultiChar type
+- using HashMap from unordered-containers instead of HashTable from hashtables.
+  Now we do not have to unsafePerformIO anymore.
+- JSON (de)serialization for SimpleScoring scheme
 
 0.0.2.0
 -------

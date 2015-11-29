@@ -2,14 +2,12 @@
 module NLP.Scoring.SimpleUnigram.Import where
 
 import           Control.Applicative
-import           Data.HashTable.IO (BasicHashTable)
+import           Data.HashMap.Strict (fromList)
 import           Data.Stringable
 import           Data.Text (Text)
 import qualified Data.Attoparsec.Text as AT
-import qualified Data.HashTable.IO as H
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import           System.IO.Unsafe (unsafePerformIO)
 
 import           NLP.Text.BTI
 
@@ -64,7 +62,7 @@ parseLine l = case AT.parseOnly (go <* AT.endOfInput) l of
 genSimpleScoring :: Text -> SimpleScoring
 genSimpleScoring l = SimpleScoring t g go ge dm di
   where
-    t    = unsafePerformIO $ H.fromListWithSizeHint (Prelude.length ys) ys
+    t    = fromList ys
     ls   = T.lines l
     xs   = map parseLine ls
     ys   = concatMap genPairs $ iss ++ eqs

@@ -2,50 +2,44 @@
 module Main where
 
 import           Control.Applicative
-import           Data.String
-import           Data.Stringable hiding (fromString)
+import           Data.Stringable
 import           Debug.Trace
 import qualified Data.Aeson as A
 import qualified Data.Binary as B
 import qualified Data.Serialize as S
 import           Test.Framework.Providers.QuickCheck2
 import           Test.Framework.TH
+import           Data.HashMap.Strict (fromList,union)
 
 import           NLP.Text.BTI
 
+import           NLP.Scoring.SimpleUnigram
+import           NLP.Scoring.SimpleUnigram.Default
 
 
--- * BTI
 
-prop_InternTwice (t :: String) = getBTI x == getBTI y
-  where x = bti $ fromString t
-        y = bti $ fromString t
+-- | Test aeson conversion. We add random @(key,value)@ pairs in the form
+-- of @xs@ to the default scoring. We also randomize the individual scoring
+-- constants.
+--
+-- Testing is done by serialization followed by deserialization and testing
+-- for equality.
 
--- basic property of interning
+prop_Aeson ( xs :: [((String,String),Double)]
+           , (gs :: Double, go :: Double, ge :: Double, dm :: Double, di :: Double)
+           )
+  = Just def' == A.decode (A.encode def')
+  where def  = clvDefaults
+        xs'  = fromList $ map (\((x,y),s) -> ((fromString x,fromString y),s)) xs
+        def' = def { simpleScore  = simpleScore def `union` xs'
+                   , gapScore     = gs
+                   , gapOpen      = go
+                   , gapExtend    = ge
+                   , defMatch     = dm
+                   , defMismatch  = di
+                   }
 
-prop_BTI (t :: String)
-  | t == u    = True
-  | otherwise = traceShow (t, getBTI i, u) False
-  where i :: BTI = fromString t
-        u        = toString   i
 
--- binary
-
-prop_Binary (t :: String) = t == toString j
-  where i :: BTI = fromString t
-        j :: BTI = B.decode $ B.encode i
-
--- cereal
-
-prop_Serialize (t :: String) = Right t == (toString <$> j)
-  where i ::               BTI = fromString t
-        j :: Either String BTI = S.decode $ S.encode i
-
--- aeson (more complicated to due the json format!
-
-prop_Aeson (t :: String) = Just [t] == (map toString <$> j)
-  where i ::       [BTI] = [fromString t]
-        j :: Maybe [BTI] = A.decode $ A.encode i
 
 main :: IO ()
 main = $(defaultMainGenerator)

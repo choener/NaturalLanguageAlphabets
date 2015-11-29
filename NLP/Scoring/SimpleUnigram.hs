@@ -3,11 +3,11 @@
 
 module NLP.Scoring.SimpleUnigram where
 
-import           Data.HashTable.IO (BasicHashTable)
-import qualified Data.HashTable.IO as H
-import           System.IO.Unsafe (unsafePerformIO)
+import GHC.Generics
+import Data.HashMap.Strict
+import Data.Aeson
 
-import           NLP.Text.BTI
+import NLP.Text.BTI
 
 
 
@@ -18,20 +18,39 @@ import           NLP.Text.BTI
 
 scoreUnigram :: SimpleScoring -> BTI -> BTI -> Double
 scoreUnigram SimpleScoring {..} x y =
-  maybe (if x==y then defMatch else defMismatch)
-  id
-  (unsafePerformIO $ H.lookup simpleScore (x,y))
+  lookupDefault (if x==y then defMatch else defMismatch) (x,y) simpleScore
 {-# INLINE scoreUnigram #-}
 
 -- | Collect the hashtable and scalar values for simple scoring.
+--
+-- TODO binary and cereal instances
 
 data SimpleScoring = SimpleScoring
-  { simpleScore  :: !(BasicHashTable (BTI,BTI) Double)
+  { simpleScore  :: !(HashMap (BTI,BTI) Double)
   , gapScore     :: !Double
   , gapOpen      :: !Double
   , gapExtend    :: !Double
   , defMatch     :: !Double
   , defMismatch  :: !Double
   }
-  deriving (Show)
+  deriving (Read,Show,Eq,Generic)
+
+instance FromJSON SimpleScoring where
+  parseJSON (Object v) = SimpleScoring <$>
+                          (fromList `fmap` (v .: "simpleScore")) <*>
+                          v .: "gapScore"    <*>
+                          v .: "gapOpen"     <*>
+                          v .: "gapExtend"   <*>
+                          v .: "defMatch"    <*>
+                          v .: "defMismatch"
+
+instance ToJSON SimpleScoring where
+  toJSON (SimpleScoring ss gs go ge dm di)
+    = object [ "simpleScore" .= toList ss
+             , "gapScore"    .= gs
+             , "gapOpen"     .= go
+             , "gapExtend"   .= ge
+             , "defMatch"    .= dm
+             , "defMismatch" .= di
+             ]
 
