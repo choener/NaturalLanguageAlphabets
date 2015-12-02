@@ -25,13 +25,6 @@ extra-source-files:
 
 
 
-flag llvm
-  description:  build the benchmark using LLVM
-  default:      False
-  manual:       True
-
-
-
 library
   build-depends: base                   >  4.7      && < 4.9
                , aeson                  >= 0.8      && < 0.11
@@ -107,11 +100,6 @@ benchmark BenchmarkNLA
     -funbox-strict-fields
     -funfolding-use-threshold1000
     -funfolding-keeness-factor1000
-  if flag(llvm)
-    ghc-options:
-      -fllvm
-      -optlo-O3 -optlo-std-compile-opts
-      -fllvm-tbaa
 
 
 
