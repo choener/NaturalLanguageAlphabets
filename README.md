@@ -2,11 +2,13 @@
 
 # Natural Language Alphabets
 
-Efficient, alphabet symbols. The symbols are interned, and hashed. This is
-quite useful for k-gram scoring, where we have different sets of symbols with
-different scores. IMMC symbols are internally represented via Ints in the range
-[0..]. This makes it possible to use unboxed containers when handling IMMC
-symbols.
+This library provides a simple scoring method for alignment of words with
+natural language alphabets.  The underlying /character/ type is BTI from the
+LinguisticsTypes package, which provides efficient encoding of arbitrarily
+complex atomic characters.
+
+The actual alignment algorithms can be found in the
+[WordAlignment](http://hackage.haskell.org/package/WordAlignment) package.
 
 
 
