@@ -8,12 +8,10 @@ packages:
   extra-dep: true
 
 extra-deps:
-- bimaps-0.0.1.0
 - cereal-text-0.1.0.1
 - intern-0.9.1.4
-- LinguisticsTypes-0.0.0.2
-- storable-record-0.0.3
-- storable-tuple-0.0.2
+#- storable-record-0.0.3
+- storable-tuple-0.0.3.2
 
 flags: {}
 
