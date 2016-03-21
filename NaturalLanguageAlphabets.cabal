@@ -30,7 +30,7 @@ library
                , aeson                  >= 0.8      &&  < 0.11
                , array                  >= 0.5      &&  < 0.6
                , attoparsec             >= 0.10     &&  < 0.14
-               , bimaps                 >= 0.0.1    &&  < 0.1
+               , bimaps                 >= 0.1      &&  < 0.2
                , binary                 >= 0.7      &&  < 0.8
                , bytestring             >= 0.10.4
                , cereal                 >= 0.4      &&  < 0.6
@@ -75,13 +75,13 @@ library
 benchmark BenchmarkNLA
   build-depends: base
                , containers
-               , criterion                >= 1.0.2  && < 1.1.1
+               , criterion                >= 1.0.2  &&  < 1.2
                , deepseq
                , hashtables
                , LinguisticsTypes
-               , mwc-random               >= 0.13   && < 0.14
+               , mwc-random               >= 0.13   &&  < 0.14
                , NaturalLanguageAlphabets
-               , random                   >= 1.0    && < 1.2
+               , random                   >= 1.0    &&  < 1.2
                , unordered-containers
                , vector
   hs-source-dirs:
