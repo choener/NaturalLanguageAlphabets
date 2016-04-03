@@ -8,6 +8,7 @@ import           Data.Text (Text)
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import           Data.Attoparsec.Text ((<?>))
 
 import           NLP.Text.BTI
 
@@ -31,6 +32,8 @@ data ParsedLine
   | PLgapextend Double
   | PLdefmatch Double
   | PLdefmismatch Double
+  | PLpresufOpen Double
+  | PLpresufExt Double
   | PLcomment Text
   deriving (Show,Eq,Ord)
 
@@ -40,16 +43,18 @@ parseLine :: Text -> ParsedLine
 parseLine l = case AT.parseOnly (go <* AT.endOfInput) l of
                 Left  err -> error $ err ++ " " ++ show l
                 Right p   -> p
-  where go =   PLset         <$ "Set"       <*> wd <*> mc `AT.sepBy1` AT.skipSpace -- AB.skipWhile AB.isHorizontalSpace
-           <|> PLeq          <$ "Eq"        <*> wd <*> nm
-           <|> PLinset       <$ "InSet"     <*> wd <*> wd <*> nm
-           <|> PLgap         <$ "Gap"       <*> nm
-           <|> PLgapopen     <$ "GapOpen"   <*> nm
-           <|> PLgapextend   <$ "GapExtend" <*> nm
-           <|> PLdefmatch    <$ "Match"     <*> nm
-           <|> PLdefmismatch <$ "Mismatch"  <*> nm
-           <|> PLeqset       <$ "EqSet"     <*> wd <*> mc `AT.sepBy1` AT.skipSpace
-           <|> PLcomment     <$ "--"        <*> AT.takeText
+  where go =   PLset         <$ "Set"           <*> wd <*> mc `AT.sepBy1` AT.skipSpace -- AB.skipWhile AB.isHorizontalSpace
+           <|> PLeq          <$ "Eq"            <*> wd <*> nm
+           <|> PLinset       <$ "InSet"         <*> wd <*> wd <*> nm
+           <|> (PLgap         <$ "Gap"           <*> nm  <?> "(linear) Gap")
+           <|> (PLgapopen     <$ "GapOpen"       <*> nm  <?> "GapOpen")
+           <|> (PLgapextend   <$ "GapExtend"     <*> nm  <?> "GapExtend")
+           <|> (PLdefmatch    <$ "Match"         <*> nm  <?> "Match")
+           <|> (PLdefmismatch <$ "Mismatch"      <*> nm  <?> "Mismatch")
+           <|> (PLpresufOpen  <$ "PreSufOpen"    <*> nm  <?> "PreSufOpen")
+           <|> (PLpresufExt   <$ "PreSufExtend"  <*> nm  <?> "PreSufExtend")
+           <|> PLeqset       <$ "EqSet"         <*> wd <*> mc `AT.sepBy1` AT.skipSpace
+           <|> PLcomment     <$ "--"            <*> AT.takeText
         wd = AT.skipSpace *> AT.takeWhile1 (not . AT.isHorizontalSpace)
         mc = fromText <$> wd
         nm = AT.skipSpace *> AT.double
@@ -60,9 +65,16 @@ parseLine l = case AT.parseOnly (go <* AT.endOfInput) l of
 -- TODO obviously: implement error-checking
 
 genSimpleScoring :: Text -> SimpleScoring
-genSimpleScoring l = SimpleScoring t g go ge dm di
+genSimpleScoring l = SimpleScoring{..} -- SimpleScoring t g go ge dm di
   where
-    t    = fromList ys
+    simpleScore = fromList ys
+    [defMatch]    = [dm | PLdefmatch dm     <- xs]
+    [defMismatch] = [di | PLdefmismatch di  <- xs]
+    [gapScore]    = [g  | PLgap g           <- xs]
+    [gapOpen]     = [go | PLgapopen go      <- xs]
+    [gapExt]      = [ge | PLgapextend ge    <- xs]
+    [preSufOpen]  = [ps | PLpresufOpen ps   <- xs]
+    [preSufExt]   = [ps | PLpresufExt ps    <- xs]
     ls   = T.lines l
     xs   = map parseLine ls
     ys   = concatMap genPairs $ iss ++ eqs
@@ -70,11 +82,6 @@ genSimpleScoring l = SimpleScoring t g go ge dm di
     eqss = [e  | e@(PLeqset _ _)   <- xs]
     eqs  = [e  | e@(PLeq _ _)      <- xs]
     iss  = [i  | i@(PLinset _ _ _) <- xs]
-    [dm] = [dm | PLdefmatch dm     <- xs]
-    [di] = [di | PLdefmismatch di  <- xs]
-    [g]  = [g  | PLgap g           <- xs]
-    [go] = [go | PLgapopen go      <- xs]
-    [ge] = [ge | PLgapextend ge    <- xs]
     -- this generates all "equality pairs", i.e. that 'a' == 'a'
     -- the second list generates all equivalence classes, say that 'a' == 'ã'
     genPairs (PLeq    x   d) = let ss = lookupSet x

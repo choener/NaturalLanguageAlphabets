@@ -1,3 +1,8 @@
+0.1.1.0
+-------
+
+- prefix / suffix affine scoring added to scoring system
+
 0.1.0.0
 -------
 

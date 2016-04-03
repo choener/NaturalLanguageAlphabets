@@ -2,14 +2,14 @@
 module Main where
 
 import           Control.Applicative
+import           Data.HashMap.Strict (fromList,union)
 import           Data.Stringable
 import           Debug.Trace
 import qualified Data.Aeson as A
 import qualified Data.Binary as B
 import qualified Data.Serialize as S
-import           Test.Framework.Providers.QuickCheck2
-import           Test.Framework.TH
-import           Data.HashMap.Strict (fromList,union)
+import           Test.Tasty.QuickCheck
+import           Test.Tasty.TH
 
 import           NLP.Text.BTI
 
@@ -26,7 +26,10 @@ import           NLP.Scoring.SimpleUnigram.Default
 -- for equality.
 
 prop_Aeson ( xs :: [((String,String),Double)]
-           , (gs :: Double, go :: Double, ge :: Double, dm :: Double, di :: Double)
+           , ( (gs :: Double, go :: Double, ge :: Double)
+             , (dm :: Double, di :: Double)
+             , (pso :: Double, pse :: Double)
+             )
            )
   = Just def' == A.decode (A.encode def')
   where def  = clvDefaults
@@ -34,9 +37,11 @@ prop_Aeson ( xs :: [((String,String),Double)]
         def' = def { simpleScore  = simpleScore def `union` xs'
                    , gapScore     = gs
                    , gapOpen      = go
-                   , gapExtend    = ge
+                   , gapExt       = ge
                    , defMatch     = dm
                    , defMismatch  = di
+                   , preSufOpen   = pso
+                   , preSufExt    = pse
                    }
 
 

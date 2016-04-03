@@ -35,6 +35,9 @@ Gap         -4
 -- Later on we want affine gap scoring, it's already here but not used
 GapOpen     -4
 GapExtend   -4
+-- Some types of grammars have differently scored prefixes and suffixes
+PreSufOpen   -1
+PreSufExtend  0
 -- This score is used when we align the same character but it's one we didn't
 -- specify in our sets
 Match        1

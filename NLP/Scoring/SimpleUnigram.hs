@@ -26,12 +26,14 @@ scoreUnigram SimpleScoring {..} x y =
 -- TODO binary and cereal instances
 
 data SimpleScoring = SimpleScoring
-  { simpleScore  :: !(HashMap (BTI,BTI) Double)
-  , gapScore     :: !Double
-  , gapOpen      :: !Double
-  , gapExtend    :: !Double
-  , defMatch     :: !Double
-  , defMismatch  :: !Double
+  { simpleScore   :: !(HashMap (BTI,BTI) Double)
+  , gapScore      :: !Double
+  , gapOpen       :: !Double
+  , gapExt        :: !Double
+  , defMatch      :: !Double
+  , defMismatch   :: !Double
+  , preSufOpen    :: !Double
+  , preSufExt     :: !Double
   }
   deriving (Read,Show,Eq,Generic)
 
@@ -40,17 +42,21 @@ instance FromJSON SimpleScoring where
                           (fromList `fmap` (v .: "simpleScore")) <*>
                           v .: "gapScore"    <*>
                           v .: "gapOpen"     <*>
-                          v .: "gapExtend"   <*>
+                          v .: "gapExt"      <*>
                           v .: "defMatch"    <*>
-                          v .: "defMismatch"
+                          v .: "defMismatch" <*>
+                          v .: "preSufOpen"  <*>
+                          v .: "preSufExt"
 
 instance ToJSON SimpleScoring where
-  toJSON (SimpleScoring ss gs go ge dm di)
-    = object [ "simpleScore" .= toList ss
-             , "gapScore"    .= gs
-             , "gapOpen"     .= go
-             , "gapExtend"   .= ge
-             , "defMatch"    .= dm
-             , "defMismatch" .= di
+  toJSON SimpleScoring {..}
+    = object [ "simpleScore" .= toList simpleScore
+             , "gapScore"    .= gapScore
+             , "gapOpen"     .= gapOpen
+             , "gapExt"      .= gapExt
+             , "defMatch"    .= defMatch
+             , "defMismatch" .= defMismatch
+             , "preSufOpen"  .= preSufOpen
+             , "preSufExt"   .= preSufExt
              ]
 
