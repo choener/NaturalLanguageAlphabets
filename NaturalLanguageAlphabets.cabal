@@ -31,7 +31,6 @@ library
                , attoparsec             >= 0.10     &&  < 0.14
                , file-embed             >= 0.0.6    &&  < 0.0.10
                , LinguisticsTypes       >= 0.0.0    &&  < 0.0.1
-               , stringable             >= 0.1.2    &&  < 0.2
                , text                   >= 0.11     &&  < 1.3
                , unordered-containers   >= 0.2.3    &&  < 0.3
 
@@ -109,7 +108,6 @@ test-suite properties
                , LinguisticsTypes
                , NaturalLanguageAlphabets
                , QuickCheck
-               , stringable
                , tasty                        >= 0.11
                , tasty-quickcheck             >= 0.8
                , tasty-th                     >= 0.1

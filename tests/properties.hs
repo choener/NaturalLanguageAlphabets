@@ -3,7 +3,6 @@ module Main where
 
 import           Control.Applicative
 import           Data.HashMap.Strict (fromList,union)
-import           Data.Stringable
 import           Debug.Trace
 import qualified Data.Aeson as A
 import qualified Data.Binary as B
@@ -33,7 +32,7 @@ prop_Aeson ( xs :: [((String,String),Double)]
            )
   = Just def' == A.decode (A.encode def')
   where def  = clvDefaults
-        xs'  = fromList $ map (\((x,y),s) -> ((fromString x,fromString y),s)) xs
+        xs'  = fromList $ map (\((x,y),s) -> ((btiFromCS x,btiFromCS y),s)) xs
         def' = def { simpleScore  = simpleScore def `union` xs'
                    , gapScore     = gs
                    , gapOpen      = go

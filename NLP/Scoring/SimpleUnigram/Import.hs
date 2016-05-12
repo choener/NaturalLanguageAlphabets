@@ -3,7 +3,6 @@ module NLP.Scoring.SimpleUnigram.Import where
 
 import           Control.Applicative
 import           Data.HashMap.Strict (fromList)
-import           Data.Stringable
 import           Data.Text (Text)
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.Text as T
@@ -56,7 +55,7 @@ parseLine l = case AT.parseOnly (go <* AT.endOfInput) l of
            <|> PLeqset       <$ "EqSet"         <*> wd <*> mc `AT.sepBy1` AT.skipSpace
            <|> PLcomment     <$ "--"            <*> AT.takeText
         wd = AT.skipSpace *> AT.takeWhile1 (not . AT.isHorizontalSpace)
-        mc = fromText <$> wd
+        mc = bti <$> wd
         nm = AT.skipSpace *> AT.double
 
 -- | Parses a bytestring to create a simple scoring. We don't do much error
