@@ -11,7 +11,7 @@ license-file:   LICENSE
 build-type:     Simple
 stability:      experimental
 cabal-version:  >= 1.10.0
-tested-with:    GHC == 7.8.4, GHC == 7.10.2
+tested-with:    GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.1
 synopsis:       Simple scoring schemes for word alignments
 description:
                 Provides a simple scoring scheme for word alignments.
@@ -64,12 +64,13 @@ benchmark BenchmarkNLA
                , criterion                >= 1.0.2  &&  < 1.2
                , deepseq
                , hashtables
-               , LinguisticsTypes
                , mwc-random               >= 0.13   &&  < 0.14
-               , NaturalLanguageAlphabets
                , random                   >= 1.0    &&  < 1.2
                , unordered-containers
                , vector
+               --
+               , LinguisticsTypes
+               , NaturalLanguageAlphabets
   hs-source-dirs:
     tests
   main-is:
