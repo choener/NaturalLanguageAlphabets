@@ -27,11 +27,11 @@ extra-source-files:
 
 library
   build-depends: base                   >  4.7      &&  < 5.0
-               , aeson                  >= 0.8      &&  < 0.12
-               , attoparsec             >= 0.10     &&  < 0.14
-               , file-embed             >= 0.0.6    &&  < 0.1
-               , text                   >= 0.11     &&  < 1.3
-               , unordered-containers   >= 0.2.3    &&  < 0.3
+               , aeson                  >= 0.8
+               , attoparsec             >= 0.10
+               , file-embed             >= 0.0.6
+               , text                   >= 0.11
+               , unordered-containers   >= 0.2.3
                --
                , LinguisticsTypes       == 0.0.0.*
 
@@ -61,11 +61,11 @@ library
 benchmark BenchmarkNLA
   build-depends: base
                , containers
-               , criterion                >= 1.0.2  &&  < 1.2
+               , criterion                >= 1.0.2
                , deepseq
                , hashtables
-               , mwc-random               >= 0.13   &&  < 0.14
-               , random                   >= 1.0    &&  < 1.2
+               , mwc-random               >= 0.13
+               , random                   >= 1.0
                , unordered-containers
                , vector
                --
@@ -107,14 +107,15 @@ test-suite properties
                , aeson
                , binary
                , cereal
-               , LinguisticsTypes
-               , NaturalLanguageAlphabets
                , QuickCheck
-               , tasty                        >= 0.11
-               , tasty-quickcheck             >= 0.8
-               , tasty-th                     >= 0.1
+               , tasty                  >= 0.11
+               , tasty-quickcheck       >= 0.8
+               , tasty-th               >= 0.1
                , text
                , unordered-containers
+               --
+               , LinguisticsTypes
+               , NaturalLanguageAlphabets
 
 
 
