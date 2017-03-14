@@ -1,4 +1,3 @@
 packages: .
-          ../Lib-bimaps
-          ../Lib-LinguisticsTypes
-
+--          ../Lib-bimaps
+--          ../Lib-LinguisticsTypes

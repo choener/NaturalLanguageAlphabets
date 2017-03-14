@@ -4,7 +4,7 @@ author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 homepage:       https://github.com/choener/NaturalLanguageAlphabets
 bug-reports:    https://github.com/choener/NaturalLanguageAlphabets/issues
-copyright:      Christian Hoener zu Siederdissen, 2014-2015
+copyright:      Christian Hoener zu Siederdissen, 2014-2017
 category:       Natural Language Processing
 license:        BSD3
 license-file:   LICENSE
