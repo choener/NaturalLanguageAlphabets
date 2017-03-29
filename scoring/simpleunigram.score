@@ -4,7 +4,7 @@
 -- scoring. It is only required to give 'EqSet's if you have more than one
 -- equivalent character. In this EqSet, everything gets a score of 'Eq Vowel'
 -- (==2).
-EqSet Vowel a â ã
+EqSet Vowel a â ã a\'
 EqSet Vowel e
 EqSet Vowel i
 EqSet Vowel o
@@ -36,8 +36,8 @@ Gap         -4
 GapOpen     -4
 GapExtend   -4
 -- Some types of grammars have differently scored prefixes and suffixes
-PreSufOpen   -1
-PreSufExtend  0
+PrefixSuffixOpen   -1
+PrefixSuffixExtend  0
 -- This score is used when we align the same character but it's one we didn't
 -- specify in our sets
 Match        1
