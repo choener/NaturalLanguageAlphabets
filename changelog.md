@@ -1,3 +1,9 @@
+0.2.0.0
+-------
+
+- generalized the scoring system
+- new parser based on trifecta
+
 0.1.1.0
 -------
 

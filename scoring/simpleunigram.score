@@ -43,3 +43,5 @@ PreSufExtend  0
 Match        1
 -- And finally how to score a mismatch that doesn't fit into the above
 Mismatch    -999999
+-- a subset of characters can be consumed via In/Del with special scoring. Say,
+-- punctuation marks.
