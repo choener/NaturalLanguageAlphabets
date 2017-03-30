@@ -1,36 +1,69 @@
 -- !!! THIS FILE ASSUMES UTF-8 ENCODING !!!
---
--- These are all vowels, but all 'a's are equivalent with respect to this
--- scoring. It is only required to give 'EqSet's if you have more than one
--- equivalent character. In this EqSet, everything gets a score of 'Eq Vowel'
--- (==2).
-EqSet Vowel a â ã a\'
-EqSet Vowel e
-EqSet Vowel i
-EqSet Vowel o
-EqSet Vowel u
--- These are sets of characters belonging to a certain class. In this case, we
--- have consonants.
-Set Conso    b c d f g h j k m n p q s t v w x y z
-Set Liquid   l r
-Set Vowel    a\' e\' i\' o\' u\'   ə ɐ æ œ   æh ɔh ɒ ɔ
--- Here we say that whenever we see a consonant aligned to the same consonant
--- in the other word, give this score.
-Eq Conso   4
-Eq Liquid  3
-Eq Vowel   2
--- Whenever we align two consonants that are not equal (or equivalent) we give
--- this score.
-InSet   Conso    Conso     0
-InSet   Conso    Liquid   -1
-InSet   Conso    Vowel    -999999
-InSet   Liquid   Conso    -1
-InSet   Liquid   Liquid   -1
-InSet   Liquid   Vowel    -1
-InSet   Vowel    Conso    -999999
-InSet   Vowel    Liquid   -1
-InSet   Vowel    Vowel     0
--- How to score a gap in a sequence
+
+{-
+We begin by defining three types of equalities.
+-}
+
+EqualScore Consonant  4
+EqualScore Liquid     3
+EqualScore Vowel      2
+
+{-
+Characters may also be similar, but not equal. In this case, we give lower
+scores. Similarity may cross types. I.e. consonants may be similar to liquid
+consonants, say.
+Disabled lines that yield a score equal to DefaultMismatch
+-}
+
+SimilarScore   Conso    Conso     0
+SimilarScore   Conso    Liquid   -1
+--SimilarScore   Conso    Vowel    -999999
+SimilarScore   Liquid   Conso    -1
+SimilarScore   Liquid   Liquid   -1
+SimilarScore   Liquid   Vowel    -1
+--SimilarScore   Vowel    Conso    -999999
+SimilarScore   Vowel    Liquid   -1
+SimilarScore   Vowel    Vowel     0
+
+{-
+Group all similar characters. This groups are automatically extended by
+EqualChars. All characters listed in EqualChars do *not* have to be added here
+again.
+-}
+
+SimilarChars Conso    b c d f g h j k m n p q s t v w x y z
+SimilarChars Liquid   l r
+SimilarChars Vowel    ə ɐ æ œ   æh ɔh ɒ ɔ
+
+{-
+Next, we group certain graphemes as equal characters. When matching graphemes,
+these are treated as the same character. These sets are only required if more
+than one character needs to be grouped. Single characters are always equal to
+themselve. Each set is associated with a type defined earlier.
+
+This should come last, in case it overrides previous declarations.
+TODO: we still consider if we want later decls. to just override earlier, or if
+we always take the maximal score.
+-}
+
+EqualChars Vowel  A a  Á á  Å å  Ä ä  Æ æ  Ã ã  A\' a\'
+EqualChars Vowel  E e  É é  E\' e\'
+EqualChars Vowel  I i  Í í  I\' i\'
+EqualChars Vowel  O o  Ó ó  Ö ö  O\' o\'
+EqualChars Vowel  U u  Ú ú  Ü ü  U\' u\'
+
+{-
+These characters should be *ignored* when gaps are considered. They are
+essentially "not in the word" or "free".
+-}
+
+IgnoredChars   ' " ! . , ;  1 2 3 4 5 6 7 8 9 0
+
+{-
+Constants for unigram-based scoring.
+-}
+
+-- How to score a gap in a sequence.
 Gap         -4
 -- Later on we want affine gap scoring, it's already here but not used
 GapOpen     -4
@@ -43,5 +76,3 @@ PrefixSuffixExtend  0
 Match        1
 -- And finally how to score a mismatch that doesn't fit into the above
 Mismatch    -999999
--- a subset of characters can be consumed via In/Del with special scoring. Say,
--- punctuation marks.
