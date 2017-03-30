@@ -112,7 +112,7 @@ pUnigram = do
   let unigramMatch = HM.fromListWith max . map (first (bti***bti)) $ similarchars ++ equalchars
   -- TODO fill this
   let specialMismatch = HM.empty -- TODO
-  gapLinear     <- uconstants "Gap"
+  gapLinear     <- uconstants "GapLinear"
   gapOpen       <- uconstants "GapOpen"
   gapExtension  <- uconstants "GapExtension"
   defaultMatch    <- uconstants "Match"
@@ -173,7 +173,7 @@ pIgnored = do
 pConstants :: UnigramParser ()
 pConstants = choice $ map pConstant cs
   where
-    cs = [ "Gap", "GapOpen", "GapExtend", "PrefixSuffixOpen", "PrefixSuffixExtend"
+    cs = [ "GapLinear", "GapOpen", "GapExtend", "PrefixSuffixOpen", "PrefixSuffixExtend"
          , "Match", "Mismatch"
          ]
     pConstant :: Text -> UnigramParser ()

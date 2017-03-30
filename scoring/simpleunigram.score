@@ -64,7 +64,7 @@ Constants for unigram-based scoring.
 -}
 
 -- How to score a gap in a sequence.
-Gap         -4
+GapLinear   -4
 -- Later on we want affine gap scoring, it's already here but not used
 GapOpen     -4
 GapExtend   -4
