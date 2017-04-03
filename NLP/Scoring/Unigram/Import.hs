@@ -6,27 +6,30 @@
 module NLP.Scoring.Unigram.Import where
 
 import           Control.Applicative
+import           Control.Arrow (first, (***))
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.State.Class
 import           Control.Monad.Trans.State.Strict hiding (gets)
+import           Data.ByteString (ByteString)
+import           Data.Char
 import           Data.HashMap.Strict (fromList, HashMap)
 import           Data.HashSet (HashSet)
+import           Data.Maybe
+import           Data.Monoid
 import           Data.String (IsString)
 import           Data.Text (Text)
 import           Debug.Trace
 import qualified Data.HashMap.Strict as HM
 import qualified Data.HashSet as HS
+import qualified Data.Sequence as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import           Text.Parser.LookAhead
 import           Text.Parser.Token.Style
 import           Text.Trifecta as TT
-import qualified Data.Sequence as S
-import           Data.Monoid
-import           Data.Char
-import           Data.Maybe
-import           Control.Arrow (first, (***))
+import qualified Data.ByteString.UTF8 as UTF8
+import           Text.Trifecta.Delta (Delta(..))
 
 import           NLP.Text.BTI
 
@@ -60,6 +63,14 @@ defaultEnv = Env
 
 
 test = fromFile "scoring/simpleunigram.score"
+
+fromByteString :: ByteString -> String -> Maybe UnigramScoring
+fromByteString s fn = r where
+  p = parseByteString ((runStateT . runUnigramParser) pUnigram defaultEnv)
+                      (Directed (UTF8.fromString fn) 0 0 0 0) s
+  r = case p of
+        Success (p',e) -> Just p'
+        e              -> error $ show e
 
 fromFile :: FilePath -> IO (Maybe UnigramScoring)
 fromFile fp = do

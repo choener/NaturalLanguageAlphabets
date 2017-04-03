@@ -53,7 +53,7 @@ data UnigramScoring = UnigramScoring
 instance FromJSON UnigramScoring where
   parseJSON (Object v)
     =   UnigramScoring
-    <$> (fromList `fmap` (v .: "simpleScore"))
+    <$> (fromList `fmap` (v .: "unigramMatch"))
     <*> (fromList `fmap` (v .: "specialMismatch"))
     <*> v .: "gapLinear"
     <*> v .: "gapOpen"
@@ -66,14 +66,14 @@ instance FromJSON UnigramScoring where
 
 instance ToJSON UnigramScoring where
   toJSON UnigramScoring {..}
-    = object [ "simpleScore"            .= toList unigramMatch
+    = object [ "unigramMatch"           .= toList unigramMatch
              , "specialMismatch"        .= toList specialMismatch
              , "gapLinear"              .= gapLinear
              , "gapOpen"                .= gapOpen
              , "gapExtension"           .= gapExtension
              , "defaultMatch"           .= defaultMatch
              , "defaultMismatch"        .= defaultMismatch
-             , "prefixsuffixLinear"     .= prefixSuffixLinear
+             , "prefixSuffixLinear"     .= prefixSuffixLinear
              , "prefixSuffixOpen"       .= prefixSuffixOpen
              , "prefixSuffixExtension"  .= prefixSuffixExtension
              ]

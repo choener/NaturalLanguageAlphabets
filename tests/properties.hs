@@ -12,8 +12,8 @@ import           Test.Tasty.TH
 
 import           NLP.Text.BTI
 
-import           NLP.Scoring.SimpleUnigram
-import           NLP.Scoring.SimpleUnigram.Default
+import           NLP.Scoring.Unigram
+import           NLP.Scoring.Unigram.Default
 
 
 
@@ -25,22 +25,26 @@ import           NLP.Scoring.SimpleUnigram.Default
 -- for equality.
 
 prop_Aeson ( xs :: [((String,String),Double)]
-           , ( (gs :: Double, go :: Double, ge :: Double)
+           , smm :: [(String,Double)]
+           , ( (gl :: Double, go :: Double, ge :: Double)
              , (dm :: Double, di :: Double)
-             , (pso :: Double, pse :: Double)
+             , (psl :: Double, pso :: Double, pse :: Double)
              )
            )
-  = Just def' == A.decode (A.encode def')
+  = Just def' == (either error id $ A.eitherDecode (A.encode def'))
   where def  = clvDefaults
         xs'  = fromList $ map (\((x,y),s) -> ((btiFromCS x,btiFromCS y),s)) xs
-        def' = def { simpleScore  = simpleScore def `union` xs'
-                   , gapScore     = gs
-                   , gapOpen      = go
-                   , gapExt       = ge
-                   , defMatch     = dm
-                   , defMismatch  = di
-                   , preSufOpen   = pso
-                   , preSufExt    = pse
+        smm' = fromList $ map (\(x,s) -> (btiFromCS x, s)) smm
+        def' = def { unigramMatch           = unigramMatch def `union` xs'
+                   , specialMismatch        = specialMismatch def `union` smm'
+                   , gapLinear              = gl
+                   , gapOpen                = go
+                   , gapExtension           = ge
+                   , defaultMatch           = dm
+                   , defaultMismatch        = di
+                   , prefixSuffixLinear     = psl
+                   , prefixSuffixOpen       = pso
+                   , prefixSuffixExtension  = pse
                    }
 
 
