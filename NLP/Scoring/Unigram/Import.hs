@@ -85,7 +85,7 @@ fromFile fp = do
 
 pUnigram :: UnigramParser UnigramScoring
 pUnigram = do
-  someSpace
+  try someSpace
   many $ choice [pEqualChars, pSimilarChars, pEqualScores, pSimilarScores, pConstants, pIgnored]
   eof
   let uconstants :: Text -> UnigramParser Double
