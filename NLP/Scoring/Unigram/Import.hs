@@ -30,6 +30,10 @@ import           Text.Parser.Token.Style
 import           Text.Trifecta as TT
 import qualified Data.ByteString.UTF8 as UTF8
 import           Text.Trifecta.Delta (Delta(..))
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           System.IO (stdout)
+import           System.Exit (exitFailure)
+import           Text.PrettyPrint.ANSI.Leijen (displayIO, renderPretty, linebreak, displayS)
 
 import           NLP.Text.BTI
 
@@ -62,26 +66,38 @@ defaultEnv = Env
 
 
 
-test = fromFile "scoring/simpleunigram.score"
+test = fromFile "scoring/unigramdefault.score"
 
-fromByteString :: ByteString -> String -> Maybe UnigramScoring
+-- | This will prettyprint the error message and ungracefully exit
+
+prettyErrorAndExit :: MonadIO m => ErrInfo -> m ()
+prettyErrorAndExit e = do
+  liftIO $ displayIO stdout $ renderPretty 0.8 80 $ (_errDoc e) <> linebreak
+  liftIO $ exitFailure
+
+-- | Returns the error message, but will not exit.
+
+errorToString :: ErrInfo -> String
+errorToString e = (displayS . renderPretty 0.8 80 $ _errDoc e) ""
+
+fromByteString :: ByteString -> String -> Either ErrInfo UnigramScoring
 fromByteString s fn = r where
   p = parseByteString ((runStateT . runUnigramParser) pUnigram defaultEnv)
                       (Directed (UTF8.fromString fn) 0 0 0 0) s
   r = case p of
-        Success (p',e) -> Just p'
-        e              -> error $ show e
+        Success (p',e) -> Right p'
+        Failure e      -> Left e
 
-fromFile :: FilePath -> IO (Maybe UnigramScoring)
+fromFile :: FilePath -> IO (Either ErrInfo UnigramScoring)
 fromFile fp = do
-  p' <- TT.parseFromFile ((runStateT . runUnigramParser) pUnigram defaultEnv) fp
+  p' <- TT.parseFromFileEx ((runStateT . runUnigramParser) pUnigram defaultEnv) fp
   case p' of
-    Nothing    -> return Nothing
-    Just (p,e) -> do
+    Success (p,e) -> do
       let ws = e^.warnings
       unless (null ws) $ do
         mapM_ T.putStrLn ws
-      return $ Just p
+      return $ Right p
+    Failure e -> return $ Left e
 
 pUnigram :: UnigramParser UnigramScoring
 pUnigram = do
