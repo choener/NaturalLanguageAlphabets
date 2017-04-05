@@ -1,0 +1,8 @@
+EqualScore Consonant  4
+SimilarScore   Consonant    Consonant     0
+SimilarChars Consonant    b c d
+EqualChars Consonant F f G g
+EqualChars Vowel a b
+IgnoredChars   9 0
+GapLinear   -4
+GapExtend   -4

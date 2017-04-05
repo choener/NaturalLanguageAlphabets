@@ -66,7 +66,7 @@ defaultEnv = Env
 
 
 
-test = fromFile "scoring/unigramdefault.score"
+test = fromFile True "tests/uni01.score"
 
 -- | This will prettyprint the error message and ungracefully exit
 
@@ -88,20 +88,20 @@ fromByteString s fn = r where
         Success (p',e) -> Right p'
         Failure e      -> Left e
 
-fromFile :: FilePath -> IO (Either ErrInfo UnigramScoring)
-fromFile fp = do
+fromFile :: Bool -> FilePath -> IO (Either ErrInfo UnigramScoring)
+fromFile warn fp = do
   p' <- TT.parseFromFileEx ((runStateT . runUnigramParser) pUnigram defaultEnv) fp
   case p' of
     Success (p,e) -> do
       let ws = e^.warnings
-      unless (null ws) $ do
+      unless (null ws || not warn) $ do
         mapM_ T.putStrLn ws
       return $ Right p
     Failure e -> return $ Left e
 
 pUnigram :: UnigramParser UnigramScoring
 pUnigram = do
-  try someSpace
+  skipOptional someSpace
   many $ choice [pEqualChars, pSimilarChars, pEqualScores, pSimilarScores, pConstants, pIgnored]
   eof
   let uconstants :: Text -> UnigramParser Double

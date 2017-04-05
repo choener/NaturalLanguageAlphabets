@@ -7,13 +7,19 @@ import           Debug.Trace
 import qualified Data.Aeson as A
 import qualified Data.Binary as B
 import qualified Data.Serialize as S
+import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
 import           Test.Tasty.TH
+import           Data.Either
+import qualified Data.HashMap.Strict as HM
+import           Data.HashMap.Strict (lookupDefault, lookup)
+import           Prelude hiding (lookup)
 
 import           NLP.Text.BTI
 
 import           NLP.Scoring.Unigram
 import           NLP.Scoring.Unigram.Default
+import           NLP.Scoring.Unigram.Import
 
 
 
@@ -47,7 +53,23 @@ prop_Aeson ( xs :: [((String,String),Double)]
                    , prefixSuffixExtension  = pse
                    }
 
+-- Everything here should succeed
 
+case_Import_uni01 = do
+  eu <- fromFile False "./tests/uni01.score"
+  assertBool "uni01 load should succeed" $ isRight eu
+  let Right u = eu
+  assertEqual "EqualScore Consonant 4 F~f" (Just 4) . lookup (bti "F", bti "f") $ unigramMatch u
+  assertEqual "GapLinear" (-4) $ gapLinear u
+  return ()
+
+-- Here we test that the parser should fail on wrong input
+
+case_Import_uni02 = do
+  eu <- fromFile False "./tests/uni02.score"
+  assertBool "uni02 load should fail" $ isLeft eu
+  let Left u = eu
+  return ()
 
 main :: IO ()
 main = $(defaultMainGenerator)
