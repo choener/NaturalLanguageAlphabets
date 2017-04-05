@@ -47,6 +47,11 @@ data UnigramScoring = UnigramScoring
   -- ^ Special gap opening score for a prefix or suffix.
   , prefixSuffixExtension :: !Double
   -- ^ Special gap extension score for a prefix or suffix.
+  , ignoreCase            :: !Bool
+  -- ^ the parser will expand lower-case character to also include
+  -- upper-case characters and vice versa. This uses @Data.Text.tuUpper@
+  -- and may lead to interesting conversions like @toUpper "ß" -> "SS"@
+  -- TODO modify scoring system via parser, or modify scoring algorithm?
   }
   deriving (Read,Show,Eq,Generic)
 
@@ -63,6 +68,7 @@ instance FromJSON UnigramScoring where
     <*> v .: "prefixSuffixLinear"
     <*> v .: "prefixSuffixOpen"
     <*> v .: "prefixSuffixExtension"
+    <*> v .: "ignoreCase"
 
 instance ToJSON UnigramScoring where
   toJSON UnigramScoring {..}
@@ -76,5 +82,6 @@ instance ToJSON UnigramScoring where
              , "prefixSuffixLinear"     .= prefixSuffixLinear
              , "prefixSuffixOpen"       .= prefixSuffixOpen
              , "prefixSuffixExtension"  .= prefixSuffixExtension
+             , "ignoreCase"             .= ignoreCase
              ]
 

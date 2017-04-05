@@ -49,6 +49,7 @@ data Env = Env
   , _similarScores  :: HashMap (Text,Text) Double
   , _constants      :: HashMap Text Double
   , _ignoredChars   :: HashSet Text
+  , _choices        :: HashSet Text
   }
   deriving (Show)
 
@@ -62,6 +63,7 @@ defaultEnv = Env
   , _similarScores  = HM.empty
   , _constants      = HM.empty
   , _ignoredChars   = HS.empty
+  , _choices        = HS.empty
   }
 
 
@@ -102,7 +104,7 @@ fromFile warn fp = do
 pUnigram :: UnigramParser UnigramScoring
 pUnigram = do
   skipOptional someSpace
-  many $ choice [pEqualChars, pSimilarChars, pEqualScores, pSimilarScores, pConstants, pIgnored]
+  many $ choice [pEqualChars, pSimilarChars, pEqualScores, pSimilarScores, pConstants, pIgnored, pChoice]
   eof
   let uconstants :: Text -> UnigramParser Double
       uconstants k = do
@@ -112,6 +114,8 @@ pUnigram = do
             warnings %= (S.|> ("constant " <> k <> " not found, using default (-999999)"))
             return (-999999)
           Just v  -> return v
+  let uchoice :: Text -> UnigramParser Bool
+      uchoice k = use choices >>= return . HS.member k
   -- now we create the list of all matches of characters (which includes
   -- similar and dissimilar characters) and maximize over the possible
   -- scores.
@@ -147,6 +151,7 @@ pUnigram = do
   prefixSuffixLinear    <- uconstants "PrefixSuffixLinear"
   prefixSuffixOpen      <- uconstants "PrefixSuffixOpen"
   prefixSuffixExtension <- uconstants "PrefixSuffixExtension"
+  ignoreCase            <- uchoice    "IgnoreCase"
   -- Given the @Env@, we can now construct the actual scoring system.
   return UnigramScoring{..}
 
@@ -192,6 +197,17 @@ pIgnored = do
   is <- runUnlined $ some pGrapheme
   someSpace
   ignoredChars %= HS.union (HS.fromList is)
+
+pChoice :: UnigramParser ()
+pChoice = choice $ map pOneChoice cs
+  where
+    cs = [ "IgnoreCase"
+         ]
+    pOneChoice :: Text -> UnigramParser ()
+    pOneChoice r = do
+      reserveText reserved r
+      tf <- option True $ (True <$ textSymbol "True") <|> (False <$ textSymbol "False")
+      when tf $ choices %= HS.insert r
 
 -- | Small parsers for the different constants we have.
 --

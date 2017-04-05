@@ -2,18 +2,18 @@
 module Main where
 
 import           Control.Applicative
+import           Data.Either
 import           Data.HashMap.Strict (fromList,union)
+import           Data.HashMap.Strict (lookupDefault, lookup)
 import           Debug.Trace
+import           Prelude hiding (lookup)
 import qualified Data.Aeson as A
 import qualified Data.Binary as B
+import qualified Data.HashMap.Strict as HM
 import qualified Data.Serialize as S
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
 import           Test.Tasty.TH
-import           Data.Either
-import qualified Data.HashMap.Strict as HM
-import           Data.HashMap.Strict (lookupDefault, lookup)
-import           Prelude hiding (lookup)
 
 import           NLP.Text.BTI
 
@@ -57,7 +57,7 @@ prop_Aeson ( xs :: [((String,String),Double)]
 
 case_Import_uni01 = do
   eu <- fromFile False "./tests/uni01.score"
-  assertBool "uni01 load should succeed" $ isRight eu
+  assertBool ("uni01 load should succeed but fails with\n" ++ (either errorToString show eu)) $ isRight eu
   let Right u = eu
   assertEqual "EqualScore Consonant 4 F~f" (Just 4) . lookup (bti "F", bti "f") $ unigramMatch u
   assertEqual "GapLinear" (-4) $ gapLinear u

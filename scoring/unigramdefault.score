@@ -1,6 +1,11 @@
 -- !!! THIS FILE ASSUMES UTF-8 ENCODING !!!
 
 {-
+We normally do not want to ignore upper/lower casing
+-}
+IgnoreCase False
+
+{-
 We begin by defining three types of equalities.
 -}
 
