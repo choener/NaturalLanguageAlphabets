@@ -42,7 +42,7 @@ import           NLP.Scoring.Unigram
 
 
 data Env = Env
-  { _equalChars     :: HashSet (Text, [Text])
+  { _equalChars     :: HashSet (Text, HashSet Text)
   , _similarChars   :: HashSet (Text, [Text])
   , _warnings       :: S.Seq Text
   , _equalScores    :: HashMap Text Double
@@ -68,7 +68,7 @@ defaultEnv = Env
 
 
 
-test = fromFile True "tests/uni01.score"
+test = fromFile True "scoring/unigramdefault.score"
 
 -- | This will prettyprint the error message and ungracefully exit
 
@@ -104,7 +104,7 @@ fromFile warn fp = do
 pUnigram :: UnigramParser UnigramScoring
 pUnigram = do
   skipOptional someSpace
-  many $ choice [pEqualChars, pSimilarChars, pEqualScores, pSimilarScores, pConstants, pIgnored, pChoice]
+  many $ choice [pEqualChars, pSimilarChars, pEqualScores, pSimilarScores, pConstants, pIgnored]
   eof
   let uconstants :: Text -> UnigramParser Double
       uconstants k = do
@@ -136,9 +136,8 @@ pUnigram = do
     return [ ((x,y),v)
            | (s,xs) <- HS.toList ecs
            , let mv = HM.lookup s ess
-           , isJust mv
-           , let Just v = mv
-           , x <- xs, y <- xs
+           , let v = maybe (error "") id mv
+           , x <- HS.toList xs, y <- HS.toList xs
            ]
   let unigramMatch = HM.fromListWith max . map (first (bti***bti)) $ similarchars ++ equalchars
   -- TODO fill this
@@ -162,19 +161,32 @@ pEqualChars :: UnigramParser ()
 pEqualChars = do
   ks <- uses equalScores HM.keys
   reserve reserved "EqualChars"
+  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
   when (null ks) $ fail "no EqualChars's defined!"
-  ty <- try $ choice $ map textSymbol ks
+  ty <- choice $ map (\t -> runUnspaced (textSymbol t) <* someSpace) ks
   vs <- runUnlined $ some pGrapheme
   someSpace
-  equalChars %= (HS.insert (ty, vs))
+  -- handle expansion options
+  let vsFinal =  vs
+              ++ [ T.toUpper v | "ToUpper" `elem` ls, v <- vs ]
+              ++ [ T.toLower v | "ToLower" `elem` ls, v <- vs ]
+  equalChars %= (HS.insert (ty, HS.fromList vsFinal))
+
+pExpansionOptions :: UnigramParser Text
+pExpansionOptions = choice [ text "ToUpper", text "ToLower" ]
 
 pSimilarChars :: UnigramParser ()
 pSimilarChars = do
   reserve reserved "SimilarChars"
+  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
   ty <- ident reserved
   vs <- runUnlined $ some pGrapheme
   someSpace
-  similarChars %= HS.insert (ty,vs)
+  -- handle expansion options
+  let vsFinal =  vs
+              ++ [ T.toUpper v | "ToUpper" `elem` ls, v <- vs ]
+              ++ [ T.toLower v | "ToLower" `elem` ls, v <- vs ]
+  similarChars %= HS.insert (ty,vsFinal)
 
 pEqualScores :: UnigramParser ()
 pEqualScores = do
@@ -198,6 +210,7 @@ pIgnored = do
   someSpace
   ignoredChars %= HS.union (HS.fromList is)
 
+{-
 pChoice :: UnigramParser ()
 pChoice = choice $ map pOneChoice cs
   where
@@ -208,6 +221,7 @@ pChoice = choice $ map pOneChoice cs
       reserveText reserved r
       tf <- option True $ (True <$ textSymbol "True") <|> (False <$ textSymbol "False")
       when tf $ choices %= HS.insert r
+-}
 
 -- | Small parsers for the different constants we have.
 --

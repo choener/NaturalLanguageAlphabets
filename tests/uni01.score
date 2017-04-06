@@ -1,4 +1,3 @@
-IgnoreCase False
 EqualScore Consonant  4
 SimilarScore   Consonant    Consonant     0
 SimilarChars Consonant    b c d

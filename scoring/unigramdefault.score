@@ -1,11 +1,6 @@
 -- !!! THIS FILE ASSUMES UTF-8 ENCODING !!!
 
 {-
-We normally do not want to ignore upper/lower casing
--}
-IgnoreCase False
-
-{-
 We begin by defining three types of equalities.
 -}
 
@@ -20,15 +15,13 @@ consonants, say.
 Disabled lines that yield a score equal to DefaultMismatch
 -}
 
-SimilarScore   Conso    Conso     0
-SimilarScore   Conso    Liquid   -1
---SimilarScore   Conso    Vowel    -999999
-SimilarScore   Liquid   Conso    -1
-SimilarScore   Liquid   Liquid   -1
-SimilarScore   Liquid   Vowel    -1
---SimilarScore   Vowel    Conso    -999999
-SimilarScore   Vowel    Liquid   -1
-SimilarScore   Vowel    Vowel     0
+SimilarScore   Consonant  Consonant    0
+SimilarScore   Consonant  Liquid      -1
+SimilarScore   Liquid     Consonant   -1
+SimilarScore   Liquid     Liquid      -1
+SimilarScore   Liquid     Vowel       -1
+SimilarScore   Vowel      Liquid      -1
+SimilarScore   Vowel      Vowel        0
 
 {-
 Group all similar characters. This groups are automatically extended by
@@ -36,9 +29,28 @@ EqualChars. All characters listed in EqualChars do *not* have to be added here
 again.
 -}
 
-SimilarChars Conso    b c d f g h j k m n p q s t v w x y z
-SimilarChars Liquid   l r
-SimilarChars Vowel    ə ɐ æ œ   æh ɔh ɒ ɔ
+SimilarChars {ToUpper} Consonant  b c d f g h j k m n p q s t v w x y z
+SimilarChars {ToUpper} Liquid     l r
+SimilarChars {ToUpper} Vowel      a å ä ã æ æ á a\' e é e\' ə ɐ æ œ í í i o ö ó u ú ú ü
+    -- æh ɔh ɒ ɔ
+
+--    TODO ???
+--    {-
+--    For each of the characters defined as similar, they are similar to their
+--    uppercase version as well.
+--    
+--    'Forall' or '∀' establishes that we operate on each of the characters
+--    'SimilarChars' selects from that grouping
+--    'Consonant' actually selects the consonants
+--    '{UpperCase}' is the "function" to apply
+--    '$' is the character.
+--    
+--    In total, we take each consonant in similar chars, apply the 'UpperCase'
+--    function to '$' and add this new character to the Consonant set.
+--    -}
+--    
+--    --Forall SimilarChars Consonant {UpperCase}$
+--    --∀      SimilarChars Liquid    {UpperCase}$
 
 {-
 Next, we group certain graphemes as equal characters. When matching graphemes,
@@ -46,16 +58,22 @@ these are treated as the same character. These sets are only required if more
 than one character needs to be grouped. Single characters are always equal to
 themselve. Each set is associated with a type defined earlier.
 
+Instead of giving to lower- and upper-case variant of each characters use the
+expansion option {ToUpper}. Just be aware, that the unicode version of
+@toUpper@ might be different from what you expect.
+
+{ToLower} does exist, too.
+
 This should come last, in case it overrides previous declarations.
 TODO: we still consider if we want later decls. to just override earlier, or if
 we always take the maximal score.
 -}
 
-EqualChars Vowel  A a  Á á  Å å  Ä ä  Æ æ  Ã ã  A\' a\'
-EqualChars Vowel  E e  É é  E\' e\'
-EqualChars Vowel  I i  Í í  I\' i\'
-EqualChars Vowel  O o  Ó ó  Ö ö  O\' o\'
-EqualChars Vowel  U u  Ú ú  Ü ü  U\' u\'
+EqualChars                    Vowel  A a  Á á  Å å  Ä ä  Æ æ  Ã ã  A\' a\'
+EqualChars                    Vowel  E e  É é  E\' e\'
+EqualChars                    Vowel  I i  Í í  I\' i\'
+EqualChars {ToUpper,ToLower}  Vowel    o  Ó    Ö   O\' o\'
+EqualChars {ToUpper}          Vowel  u ú ü u\'
 
 {-
 These characters should be *ignored* when gaps are considered. They are
