@@ -41,16 +41,16 @@ prop_Aeson ( xs :: [((String,String),Double)]
   where def  = clvDefaults
         xs'  = fromList $ map (\((x,y),s) -> ((btiFromCS x,btiFromCS y),s)) xs
         smm' = fromList $ map (\(x,s) -> (btiFromCS x, s)) smm
-        def' = def { unigramMatch           = unigramMatch def `union` xs'
-                   , specialMismatch        = specialMismatch def `union` smm'
-                   , gapLinear              = gl
-                   , gapOpen                = go
-                   , gapExtension           = ge
-                   , defaultMatch           = dm
-                   , defaultMismatch        = di
-                   , prefixSuffixLinear     = psl
-                   , prefixSuffixOpen       = pso
-                   , prefixSuffixExtension  = pse
+        def' = def { usUnigramMatch           = usUnigramMatch  def `union` xs'
+                   , usUnigramInsert          = usUnigramInsert def `union` smm'
+                   , usGapLinear              = gl
+                   , usGapOpen                = go
+                   , usGapExtension           = ge
+                   , usDefaultMatch           = dm
+                   , usDefaultMismatch        = di
+                   , usPrefixSuffixLinear     = psl
+                   , usPrefixSuffixOpen       = pso
+                   , usPrefixSuffixExtension  = pse
                    }
 
 -- Everything here should succeed
@@ -59,17 +59,14 @@ case_Import_uni01 = do
   eu <- fromFile False "./tests/uni01.score"
   assertBool ("uni01 load should succeed but fails with\n" ++ (either errorToString show eu)) $ isRight eu
   let Right u = eu
-  assertEqual "EqualScore Consonant 4 F~f" (Just 4) . lookup (bti "F", bti "f") $ unigramMatch u
-  assertEqual "GapLinear" (-4) $ gapLinear u
-  return ()
+  assertEqual "EqualScore Consonant 4 F~f" (Just 4) . lookup (bti "F", bti "f") $ usUnigramMatch u
+  assertEqual "GapLinear" (-4) $ usGapLinear u
 
 -- Here we test that the parser should fail on wrong input
 
 case_Import_uni02 = do
   eu <- fromFile False "./tests/uni02.score"
   assertBool "uni02 load should fail" $ isLeft eu
-  let Left u = eu
-  return ()
 
 main :: IO ()
 main = $(defaultMainGenerator)
