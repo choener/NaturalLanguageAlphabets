@@ -1,5 +1,5 @@
 name:           NaturalLanguageAlphabets
-version:        0.2.0.0
+version:        0.2.1.0
 author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 homepage:       https://github.com/choener/NaturalLanguageAlphabets
@@ -41,7 +41,7 @@ library
                , unordered-containers   >= 0.2.3
                , utf8-string            >= 1.0
                --
-               , LinguisticsTypes       == 0.0.0.*
+               , LinguisticsTypes       == 0.1.0.*
 
   exposed-modules:
     NLP.Scoring.Unigram
@@ -52,12 +52,14 @@ library
     Haskell2010
 
   default-extensions: BangPatterns
+                    , DataKinds
                     , DeriveGeneric
                     , DeriveDataTypeable
                     , FlexibleInstances
                     , GeneralizedNewtypeDeriving
                     , MultiParamTypeClasses
                     , OverloadedStrings
+                    , PolyKinds
                     , RecordWildCards
                     , StandaloneDeriving
                     , TemplateHaskell

@@ -1,3 +1,8 @@
+0.2.1.0
+-------
+
+- using polykinded BTI to disallow language name confusion
+
 0.2.0.0
 -------
 

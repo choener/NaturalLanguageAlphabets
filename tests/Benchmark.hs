@@ -59,7 +59,7 @@ htLookup ht k = unsafePerformIO $ do
 {-# Inline htLookup #-}
 
 
-type HTB = HT.BasicHashTable BTI Double
+type HTB = HT.BasicHashTable (BTI ()) Double
 
 setupEnv = do
   -- create keys

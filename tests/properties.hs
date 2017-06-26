@@ -42,7 +42,8 @@ prop_Aeson ( xs :: [((String,String),Double)]
         xs'  = fromList $ map (\((x,y),s) -> ((btiFromCS x,btiFromCS y),s)) xs
         smm' = fromList $ map (\(x,s) -> (btiFromCS x, s)) smm
         def' = def { usUnigramMatch           = usUnigramMatch  def `union` xs'
-                   , usUnigramInsert          = usUnigramInsert def `union` smm'
+                   , usUnigramInsertFstK      = usUnigramInsertFstK def `union` smm'
+                   , usUnigramInsertSndL      = usUnigramInsertSndL def `union` smm'
                    , usGapLinear              = gl
                    , usGapOpen                = go
                    , usGapExtension           = ge

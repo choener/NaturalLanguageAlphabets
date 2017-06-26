@@ -43,22 +43,24 @@ import           NLP.Scoring.Unigram
 
 
 data Env = Env
-  { _warnings       :: S.Seq Text
-  , _defaults       :: HashMap Text Double
-  , _charGroups     :: HashMap Text (HashSet Text)
-  , _matchScores    :: HashMap (Text,Text) Double
-  , _ignoredScores  :: HashMap Text Double
+  { _warnings           :: S.Seq Text
+  , _defaults           :: HashMap Text Double
+  , _charGroups         :: HashMap Text (HashSet Text)
+  , _matchScores        :: HashMap (Text,Text) Double
+  , _ignoredScoresFstK  :: HashMap Text Double
+  , _ignoredScoresSndL  :: HashMap Text Double
   }
   deriving (Show)
 
 makeLenses ''Env
 
 defaultEnv = Env
-  { _warnings       = S.empty
-  , _defaults       = HM.empty
-  , _charGroups     = HM.empty
-  , _matchScores    = HM.empty
-  , _ignoredScores  = HM.empty
+  { _warnings           = S.empty
+  , _defaults           = HM.empty
+  , _charGroups         = HM.empty
+  , _matchScores        = HM.empty
+  , _ignoredScoresFstK  = HM.empty
+  , _ignoredScoresSndL  = HM.empty
   }
 
 
@@ -77,7 +79,7 @@ prettyErrorAndExit e = do
 errorToString :: ErrInfo -> String
 errorToString e = (displayS . renderPretty 0.8 80 $ _errDoc e) ""
 
-fromByteString :: ByteString -> String -> Either ErrInfo UnigramScoring
+fromByteString :: ByteString -> String -> Either ErrInfo (UnigramScoring k l)
 fromByteString s fn = r where
   p = parseByteString ((runStateT . runUnigramParser) pUnigram defaultEnv)
                       (Directed (UTF8.fromString fn) 0 0 0 0) s
@@ -85,7 +87,7 @@ fromByteString s fn = r where
         Success (p',e) -> Right p'
         Failure e      -> Left e
 
-fromFile :: Bool -> FilePath -> IO (Either ErrInfo UnigramScoring)
+fromFile :: Bool -> FilePath -> IO (Either ErrInfo (UnigramScoring k l))
 fromFile warn fp = do
   p' <- TT.parseFromFileEx ((runStateT . runUnigramParser) pUnigram defaultEnv) fp
   case p' of
@@ -96,7 +98,7 @@ fromFile warn fp = do
       return $ Right p
     Failure e -> return $ Left e
 
-pUnigram :: UnigramParser UnigramScoring
+pUnigram :: UnigramParser (UnigramScoring k l)
 pUnigram = do
   skipOptional someSpace
   many $ choice [pDefaults, pCharGroup, pSimilarity, pEquality, pIgnored]
@@ -110,8 +112,9 @@ pUnigram = do
             -- fail $ "constant " <> show k <> " not found"
             return (-999999)
           Just v  -> return v
-  usUnigramMatch  <- (HM.fromList . map (first (bti***bti)) . HM.toList) <$> use matchScores
-  usUnigramInsert <- (HM.fromList . map (first bti) . HM.toList) <$> use ignoredScores
+  usUnigramMatch      <- (HM.fromList . map (first (bti***bti)) . HM.toList) <$> use matchScores
+  usUnigramInsertFstK <- (HM.fromList . map (first bti) . HM.toList) <$> use ignoredScoresFstK
+  usUnigramInsertSndL <- (HM.fromList . map (first bti) . HM.toList) <$> use ignoredScoresSndL
   usGapLinear     <- uconstants "GapLinear"
   usGapOpen       <- uconstants "GapOpen"
   usGapExtension  <- uconstants "GapExtension"
@@ -187,15 +190,22 @@ pEquality = do
   let vs = HM.fromList [ ((x,y),v) | xs <- xss, x <- HS.toList xs, y <- HS.toList xs ]
   matchScores %= HM.union vs
 
+data FstKSndL = FstK | SndL
+  deriving (Eq,Ord)
+
 pIgnored :: UnigramParser ()
-pIgnored = do
-  reserve reserved "Ignored"
-  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
-  ty <- runUnlined pKnownCharGroup
-  v  <- either fromIntegral id <$> integerOrDouble
-  let xs = applySpecialFunctions ls ty
-  let vs = HM.fromList [ (x,v) | x <- HS.toList xs ]
-  ignoredScores %= HM.union vs
+pIgnored =   (reserve reserved "Ignored"    >> go [FstK,SndL])
+         <|> (reserve reserved "IgnoredFst" >> go [FstK]     )
+         <|> (reserve reserved "IgnoredSnd" >> go [     SndL])
+  where
+    go what = do
+      ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
+      ty <- runUnlined pKnownCharGroup
+      v  <- either fromIntegral id <$> integerOrDouble
+      let xs = applySpecialFunctions ls ty
+      let vs = HM.fromList [ (x,v) | x <- HS.toList xs ]
+      when (FstK `elem` what) $ ignoredScoresFstK %= HM.union vs
+      when (SndL `elem` what) $ ignoredScoresSndL %= HM.union vs
 
 -- | Defines what a grapheme is. Basically, don't be a whitespace and don't
 -- start with '$'.

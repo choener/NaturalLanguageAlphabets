@@ -75,7 +75,11 @@ Equality {ToLower,ToUpper} $C 4
 {-
 These characters should be *ignored* when gaps are considered. They are
 essentially "not in the word" or "free", but the scores can be set, of course.
+Fst and Snd designate which of the two tapes we talk about. If this is missing,
+the ignored characters are ignored on both tapes.
 -}
 
-Ignored {ToLower,ToUpper} $Ignored 0
+IgnoredFst {ToLower,ToUpper} $Ignored 0
+IgnoredSnd {ToLower,ToUpper} $Ignored 0
+Ignored                      $Ignored 0
 
