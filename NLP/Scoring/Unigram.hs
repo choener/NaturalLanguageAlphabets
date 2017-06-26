@@ -3,9 +3,9 @@
 
 module NLP.Scoring.Unigram where
 
-import GHC.Generics
-import Data.HashMap.Strict
 import Data.Aeson
+import Data.HashMap.Strict
+import GHC.Generics
 
 import NLP.Text.BTI
 
@@ -16,42 +16,49 @@ import NLP.Text.BTI
 -- database, then return the default matching 'defaultMatch' score if
 -- @x==y@, otherwise return the default mismatch 'defaultMismatch' score.
 
-scoreUnigram :: UnigramScoring -> BTI -> BTI -> Double
-scoreUnigram UnigramScoring {..} x y =
-  lookupDefault (if x==y then defaultMatch else defaultMismatch) (x,y) unigramMatch
-{-# Inline scoreUnigram #-}
+matchUnigram :: UnigramScoring -> BTI -> BTI -> Double
+matchUnigram UnigramScoring{..} x y =
+  lookupDefault (if x==y then usDefaultMatch else usDefaultMismatch) (x,y) usUnigramMatch
+{-# Inline matchUnigram #-}
+
+-- | Provides a score for the unigram characters in an @in/del@
+-- environment. In case the character @x@ in the pairing @x == '-'@ is
+-- found in the @unigramInsert@ database, that score is used, otherwise the
+-- @gapLinear@ score is used.
+
+insertUnigram ∷ UnigramScoring → BTI → Double
+insertUnigram UnigramScoring{..} x =
+  lookupDefault usGapLinear x usUnigramInsert
+{-# Inline insertUnigram #-}
+
+-- TODO $UTF-Vowels , etc in parsing ?!
 
 -- | Collect the hashtable and scalar values for simple scoring.
 --
 -- TODO binary and cereal instances
 
 data UnigramScoring = UnigramScoring
-  { unigramMatch          :: !(HashMap (BTI,BTI) Double)
+  { usUnigramMatch          :: !(HashMap (BTI,BTI) Double)
   -- ^ All known matching characters and associated scores.
-  , specialMismatch       :: !(HashMap BTI Double)
+  , usUnigramInsert         :: !(HashMap BTI Double)
   -- ^ Characters that can be deleted with costs different from
   -- @gapOpen@/@gapExtension@.
-  , gapLinear             :: !Double
+  , usGapLinear             :: !Double
   -- ^ linear gap scores
-  , gapOpen               :: !Double
+  , usGapOpen               :: !Double
   -- ^ Gap opening costs for Gotoh-style grammars.
-  , gapExtension          :: !Double
+  , usGapExtension          :: !Double
   -- ^ Gap extension costs for Gotoh-style grammars.
-  , defaultMatch          :: !Double
+  , usDefaultMatch          :: !Double
   -- ^ Default score for characters matching, i.e. @x==y@.
-  , defaultMismatch       :: !Double
+  , usDefaultMismatch       :: !Double
   -- ^ Default score for characters not matching, i.e. @x/=y@.
-  , prefixSuffixLinear    :: !Double
+  , usPrefixSuffixLinear    :: !Double
   -- ^ Special gap score for a prefix or suffix.
-  , prefixSuffixOpen      :: !Double
+  , usPrefixSuffixOpen      :: !Double
   -- ^ Special gap opening score for a prefix or suffix.
-  , prefixSuffixExtension :: !Double
+  , usPrefixSuffixExtension :: !Double
   -- ^ Special gap extension score for a prefix or suffix.
-  , ignoreCase            :: !Bool
-  -- ^ the parser will expand lower-case character to also include
-  -- upper-case characters and vice versa. This uses @Data.Text.tuUpper@
-  -- and may lead to interesting conversions like @toUpper "ß" -> "SS"@
-  -- TODO modify scoring system via parser, or modify scoring algorithm?
   }
   deriving (Read,Show,Eq,Generic)
 
@@ -59,7 +66,7 @@ instance FromJSON UnigramScoring where
   parseJSON (Object v)
     =   UnigramScoring
     <$> (fromList `fmap` (v .: "unigramMatch"))
-    <*> (fromList `fmap` (v .: "specialMismatch"))
+    <*> (fromList `fmap` (v .: "unigramInsert"))
     <*> v .: "gapLinear"
     <*> v .: "gapOpen"
     <*> v .: "gapExtension"
@@ -68,20 +75,18 @@ instance FromJSON UnigramScoring where
     <*> v .: "prefixSuffixLinear"
     <*> v .: "prefixSuffixOpen"
     <*> v .: "prefixSuffixExtension"
-    <*> v .: "ignoreCase"
 
 instance ToJSON UnigramScoring where
   toJSON UnigramScoring {..}
-    = object [ "unigramMatch"           .= toList unigramMatch
-             , "specialMismatch"        .= toList specialMismatch
-             , "gapLinear"              .= gapLinear
-             , "gapOpen"                .= gapOpen
-             , "gapExtension"           .= gapExtension
-             , "defaultMatch"           .= defaultMatch
-             , "defaultMismatch"        .= defaultMismatch
-             , "prefixSuffixLinear"     .= prefixSuffixLinear
-             , "prefixSuffixOpen"       .= prefixSuffixOpen
-             , "prefixSuffixExtension"  .= prefixSuffixExtension
-             , "ignoreCase"             .= ignoreCase
+    = object [ "unigramMatch"           .= toList usUnigramMatch
+             , "unigramInsert"          .= toList usUnigramInsert
+             , "gapLinear"              .= usGapLinear
+             , "gapOpen"                .= usGapOpen
+             , "gapExtension"           .= usGapExtension
+             , "defaultMatch"           .= usDefaultMatch
+             , "defaultMismatch"        .= usDefaultMismatch
+             , "prefixSuffixLinear"     .= usPrefixSuffixLinear
+             , "prefixSuffixOpen"       .= usPrefixSuffixOpen
+             , "prefixSuffixExtension"  .= usPrefixSuffixExtension
              ]
 

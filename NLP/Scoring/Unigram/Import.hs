@@ -9,6 +9,7 @@ import           Control.Applicative
 import           Control.Arrow (first, (***))
 import           Control.Lens
 import           Control.Monad
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.State.Class
 import           Control.Monad.Trans.State.Strict hiding (gets)
 import           Data.ByteString (ByteString)
@@ -20,20 +21,20 @@ import           Data.Monoid
 import           Data.String (IsString)
 import           Data.Text (Text)
 import           Debug.Trace
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.HashMap.Strict as HM
 import qualified Data.HashSet as HS
 import qualified Data.Sequence as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import           System.Exit (exitFailure)
+import           System.IO (stdout)
 import           Text.Parser.LookAhead
 import           Text.Parser.Token.Style
-import           Text.Trifecta as TT
-import qualified Data.ByteString.UTF8 as UTF8
-import           Text.Trifecta.Delta (Delta(..))
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           System.IO (stdout)
-import           System.Exit (exitFailure)
 import           Text.PrettyPrint.ANSI.Leijen (displayIO, renderPretty, linebreak, displayS)
+import           Text.Trifecta as TT
+import           Text.Trifecta.Delta (Delta(..))
 
 import           NLP.Text.BTI
 
@@ -42,28 +43,22 @@ import           NLP.Scoring.Unigram
 
 
 data Env = Env
-  { _equalChars     :: HashSet (Text, HashSet Text)
-  , _similarChars   :: HashSet (Text, [Text])
-  , _warnings       :: S.Seq Text
-  , _equalScores    :: HashMap Text Double
-  , _similarScores  :: HashMap (Text,Text) Double
-  , _constants      :: HashMap Text Double
-  , _ignoredChars   :: HashSet Text
-  , _choices        :: HashSet Text
+  { _warnings       :: S.Seq Text
+  , _defaults       :: HashMap Text Double
+  , _charGroups     :: HashMap Text (HashSet Text)
+  , _matchScores    :: HashMap (Text,Text) Double
+  , _ignoredScores  :: HashMap Text Double
   }
   deriving (Show)
 
 makeLenses ''Env
 
 defaultEnv = Env
-  { _equalChars     = HS.empty
-  , _similarChars   = HS.empty
-  , _warnings       = S.empty
-  , _equalScores    = HM.empty
-  , _similarScores  = HM.empty
-  , _constants      = HM.empty
-  , _ignoredChars   = HS.empty
-  , _choices        = HS.empty
+  { _warnings       = S.empty
+  , _defaults       = HM.empty
+  , _charGroups     = HM.empty
+  , _matchScores    = HM.empty
+  , _ignoredScores  = HM.empty
   }
 
 
@@ -104,56 +99,139 @@ fromFile warn fp = do
 pUnigram :: UnigramParser UnigramScoring
 pUnigram = do
   skipOptional someSpace
-  many $ choice [pEqualChars, pSimilarChars, pEqualScores, pSimilarScores, pConstants, pIgnored]
+  many $ choice [pDefaults, pCharGroup, pSimilarity, pEquality, pIgnored]
   eof
   let uconstants :: Text -> UnigramParser Double
       uconstants k = do
-        kv <- use constants
+        kv <- use defaults
         case HM.lookup k kv of
           Nothing -> do
             warnings %= (S.|> ("constant " <> k <> " not found, using default (-999999)"))
+            -- fail $ "constant " <> show k <> " not found"
             return (-999999)
           Just v  -> return v
-  let uchoice :: Text -> UnigramParser Bool
-      uchoice k = use choices >>= return . HS.member k
-  -- now we create the list of all matches of characters (which includes
-  -- similar and dissimilar characters) and maximize over the possible
-  -- scores.
-  similarchars <- do
-    scs <- use similarChars
-    sss <- use similarScores
-    return [ ((x,y),v)
-           | (s,xs) <- HS.toList scs
-           , (t,ys) <- HS.toList scs
-           , let mv = HM.lookup (s,t) sss
-           , isJust mv
-           , let Just v = mv
-           , x <- xs, y <- ys
-           ]
-  equalchars <- do
-    ecs <- use equalChars
-    ess <- use equalScores
-    return [ ((x,y),v)
-           | (s,xs) <- HS.toList ecs
-           , let mv = HM.lookup s ess
-           , let v = maybe (error "") id mv
-           , x <- HS.toList xs, y <- HS.toList xs
-           ]
-  let unigramMatch = HM.fromListWith max . map (first (bti***bti)) $ similarchars ++ equalchars
-  -- TODO fill this
-  let specialMismatch = HM.empty -- TODO
-  gapLinear     <- uconstants "GapLinear"
-  gapOpen       <- uconstants "GapOpen"
-  gapExtension  <- uconstants "GapExtension"
-  defaultMatch    <- uconstants "Match"
-  defaultMismatch <- uconstants "Mismatch"
-  prefixSuffixLinear    <- uconstants "PrefixSuffixLinear"
-  prefixSuffixOpen      <- uconstants "PrefixSuffixOpen"
-  prefixSuffixExtension <- uconstants "PrefixSuffixExtension"
-  ignoreCase            <- uchoice    "IgnoreCase"
-  -- Given the @Env@, we can now construct the actual scoring system.
+  usUnigramMatch  <- (HM.fromList . map (first (bti***bti)) . HM.toList) <$> use matchScores
+  usUnigramInsert <- (HM.fromList . map (first bti) . HM.toList) <$> use ignoredScores
+  usGapLinear     <- uconstants "GapLinear"
+  usGapOpen       <- uconstants "GapOpen"
+  usGapExtension  <- uconstants "GapExtension"
+  usDefaultMatch    <- uconstants "Match"
+  usDefaultMismatch <- uconstants "Mismatch"
+  usPrefixSuffixLinear    <- uconstants "PrefixSuffixLinear"
+  usPrefixSuffixOpen      <- uconstants "PrefixSuffixOpen"
+  usPrefixSuffixExtension <- uconstants "PrefixSuffixExtension"
+--  -- Given the @Env@, we can now construct the actual scoring system.
   return UnigramScoring{..}
 
+-- | Defaults are key-value pairs, of which there is only a small set.
+
+pDefaults :: UnigramParser ()
+pDefaults = choice $ map pConstant cs
+  where
+    cs = [ "GapLinear", "GapOpen", "GapExtend", "PrefixSuffixOpen", "PrefixSuffixExtend"
+         , "Match", "Mismatch"
+         ]
+    pConstant :: Text -> UnigramParser ()
+    pConstant r = do
+      reserveText reserved r
+      ds <- use defaults
+      when (HM.member r ds) (fail $ show r ++ " already defined")
+      v <- either fromIntegral id <$> integerOrDouble
+      defaults %= HM.insert r v
+
+-- | Gives a name to a set of characters we want to work with later on.
+
+pCharGroup :: UnigramParser ()
+pCharGroup = do
+  reserve reserved "CharGroup"
+  ty <- ident reserved
+  -- TODO the {,} guys
+  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
+  vs' <- runUnlined $ do
+    gs <- HS.unions <$> (some $ (HS.singleton <$> pGrapheme) <|> pKnownCharGroup)
+    rol <- restOfLine
+    unless (rol == "\n") $ fail $ show (gs,rol)
+    return gs
+  someSpace
+  let vs = applySpecialFunctions ls vs'
+  charGroups %= HM.insert ty vs
+
+-- | Parses a similarity line and updates the scores for the pairs of
+-- characters.
+
+pSimilarity :: UnigramParser ()
+pSimilarity = do
+  reserve reserved "Similarity"
+  ls1 <- option [] . braces $ pExpansionOptions `sepEndBy` comma
+  ty1 <- runUnlined pKnownCharGroup
+  ls2 <- option [] . braces $ pExpansionOptions `sepEndBy` comma
+  ty2 <- runUnlined pKnownCharGroup
+  v  <- either fromIntegral id <$> integerOrDouble
+  let xs = applySpecialFunctions ls1 ty1
+  let ys = applySpecialFunctions ls2 ty2
+  let vs = HM.fromList [ ((x,y),v) | x <- HS.toList xs, y <- HS.toList ys ]
+  -- mapping from the first will be the result in clashes, hence @HS.union
+  -- vs old@ ...
+  matchScores %= HM.union vs
+
+-- | Parses an equality line and updates the scores for the pairs of
+-- characters.
+
+pEquality :: UnigramParser ()
+pEquality = do
+  reserve reserved "Equality"
+  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
+  ty <- runUnlined pKnownCharGroup
+  v  <- either fromIntegral id <$> integerOrDouble
+  let xss = map (applySpecialFunctions ls . HS.singleton) $ HS.toList ty
+  let vs = HM.fromList [ ((x,y),v) | xs <- xss, x <- HS.toList xs, y <- HS.toList xs ]
+  matchScores %= HM.union vs
+
+pIgnored :: UnigramParser ()
+pIgnored = do
+  reserve reserved "Ignored"
+  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
+  ty <- runUnlined pKnownCharGroup
+  v  <- either fromIntegral id <$> integerOrDouble
+  let xs = applySpecialFunctions ls ty
+  let vs = HM.fromList [ (x,v) | x <- HS.toList xs ]
+  ignoredScores %= HM.union vs
+
+-- | Defines what a grapheme is. Basically, don't be a whitespace and don't
+-- start with '$'.
+--
+-- TODO we probably want to allow \$ to stand for '$'.
+
+pGrapheme :: (CharParsing p, TokenParsing p) => p Text
+pGrapheme = (T.pack <$> some (satisfy allowed) <* someSpace) <?> "pGrapheme"
+  where allowed x = (not $ isSpace x || x `elem` ("${}" :: String))
+
+-- | Returns the set of characters from a known character group
+
+pKnownCharGroup :: Unlined UnigramParser (HS.HashSet Text)
+pKnownCharGroup = go <?> "pKnownCharGroup" where
+  go = do
+    char '$'
+    ty <- ident reserved
+    cgs <- use charGroups
+    case HM.lookup ty cgs of
+      Nothing -> fail $ show ty ++ " is not a known CharGroup!"
+      Just cg -> return cg
+
+-- | How we can expand a group with special functions.
+
+pExpansionOptions :: UnigramParser Text
+pExpansionOptions = choice $ map (text . fst) specialFunctions
+
+specialFunctions ∷ [(Text, Text → Text)]
+specialFunctions =
+  [ ("ToUpper", T.toUpper)
+  , ("ToLower", T.toLower)
+  ]
+
+applySpecialFunctions ls xs =
+  HS.unions $ xs : [ HS.map sf xs | (sfn,sf) <- specialFunctions, sfn `elem` ls ]
+{-
 -- | Read a line containing an "EqualChars". Will only parse successfully if the
 -- set is not yet known. Inserts the set into the @Env@.
 
@@ -171,22 +249,6 @@ pEqualChars = do
               ++ [ T.toUpper v | "ToUpper" `elem` ls, v <- vs ]
               ++ [ T.toLower v | "ToLower" `elem` ls, v <- vs ]
   equalChars %= (HS.insert (ty, HS.fromList vsFinal))
-
-pExpansionOptions :: UnigramParser Text
-pExpansionOptions = choice [ text "ToUpper", text "ToLower" ]
-
-pSimilarChars :: UnigramParser ()
-pSimilarChars = do
-  reserve reserved "SimilarChars"
-  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
-  ty <- ident reserved
-  vs <- runUnlined $ some pGrapheme
-  someSpace
-  -- handle expansion options
-  let vsFinal =  vs
-              ++ [ T.toUpper v | "ToUpper" `elem` ls, v <- vs ]
-              ++ [ T.toLower v | "ToLower" `elem` ls, v <- vs ]
-  similarChars %= HS.insert (ty,vsFinal)
 
 pEqualScores :: UnigramParser ()
 pEqualScores = do
@@ -223,24 +285,7 @@ pChoice = choice $ map pOneChoice cs
       when tf $ choices %= HS.insert r
 -}
 
--- | Small parsers for the different constants we have.
---
--- TODO bail if we see a constant twice?
-
-pConstants :: UnigramParser ()
-pConstants = choice $ map pConstant cs
-  where
-    cs = [ "GapLinear", "GapOpen", "GapExtend", "PrefixSuffixOpen", "PrefixSuffixExtend"
-         , "Match", "Mismatch"
-         ]
-    pConstant :: Text -> UnigramParser ()
-    pConstant r = do
-      reserveText reserved r
-      v <- either fromIntegral id <$> integerOrDouble
-      constants %= HM.insert r v
-
-pGrapheme :: (CharParsing p, TokenParsing p) => p Text
-pGrapheme = T.pack <$> some (satisfy (not . isSpace)) <* someSpace
+-}
 
 -- | TODO only insert warning, not error, after seeing a character again!
 
@@ -252,8 +297,8 @@ setIdent e = try $ do
 
 reserved :: TokenParsing m => IdentifierStyle m
 reserved = emptyIdents { _styleReserved = rs }
-  where rs = HS.fromList [ "EqualChars", "SimilarChars", "EqualScore", "SimilarScore"
-                         , "IgnoredChars"
+  where rs = HS.fromList [ -- "EqualChars", "SimilarChars", "EqualScore", "SimilarScore"
+                         -- , "IgnoredChars", "CharGroup"
                          ]
 
 
@@ -262,6 +307,7 @@ newtype UnigramParser a = UnigramParser { runUnigramParser :: StateT Env Parser 
     ( Alternative
     , Applicative
     , CharParsing
+    , DeltaParsing
     , Functor
     , Monad
     , MonadPlus
@@ -272,4 +318,6 @@ newtype UnigramParser a = UnigramParser { runUnigramParser :: StateT Env Parser 
 
 instance TokenParsing UnigramParser where
   someSpace = buildSomeSpaceParser (() <$ space) haskellCommentStyle
+
+deriving instance DeltaParsing (Unlined UnigramParser)
 

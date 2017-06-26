@@ -54,12 +54,15 @@ library
   default-extensions: BangPatterns
                     , DeriveGeneric
                     , DeriveDataTypeable
+                    , FlexibleInstances
                     , GeneralizedNewtypeDeriving
                     , MultiParamTypeClasses
                     , OverloadedStrings
                     , RecordWildCards
+                    , StandaloneDeriving
                     , TemplateHaskell
                     , TypeFamilies
+                    , UnicodeSyntax
 
   ghc-options:
     -O2 -funbox-strict-fields
