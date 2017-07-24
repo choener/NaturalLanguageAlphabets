@@ -24,7 +24,7 @@ import           System.Random
 import           System.Random.MWC
 import           Text.Printf
 
-import NLP.Text.BTI
+import           Data.ByteString.Interned
 
 
 
@@ -36,11 +36,11 @@ main = do ( !keys , !unks , (!hmsH,!cisH,!htH) , (!hmsK,!cisK,!htK) ) <- setupEn
                     (UCHS.size hmsK) (CIS.size cisK) (-1 :: Int)
           defaultMain
             [ bgroup "  100 keys" [ bench "HashMap.Strict" $ whnf (\k -> UCHS.lookupDefault  0 k hmsH) (VU.head keys)
-                                  , bench "IntMap.Strict" $ whnf (\k -> CIS.findWithDefault 0 k cisH) (getBTI $ VU.head keys)
+                                  , bench "IntMap.Strict" $ whnf (\k -> CIS.findWithDefault 0 k cisH) (getIBS $ VU.head keys)
                                   , bench "HashTable" $ whnf (\k -> htLookup htH k)               (VU.head keys)
                                   ]
             , bgroup "10000 keys" [ bench "HashMap.Strict" $ whnf (\k -> UCHS.lookupDefault  0 k hmsK) (VU.head keys)
-                                  , bench "IntMap.Strict" $ whnf (\k -> CIS.findWithDefault 0 k cisK) (getBTI $ VU.head keys)
+                                  , bench "IntMap.Strict" $ whnf (\k -> CIS.findWithDefault 0 k cisK) (getIBS $ VU.head keys)
                                   , bench "HashTable" $ whnf (\k -> htLookup htK k)               (VU.head keys)
                                   ]
 --            , bgroup "  100 known"   [ bench "uchsH" $ whnf (\ks -> VU.sum $ VU.map (\k -> UCHS.lookupDefault  0 k hmsH) ks) (VU.take 100 keys)
@@ -59,25 +59,25 @@ htLookup ht k = unsafePerformIO $ do
 {-# Inline htLookup #-}
 
 
-type HTB = HT.BasicHashTable (BTI ()) Double
+type HTB = HT.BasicHashTable (IBS ()) Double
 
 setupEnv = do
   -- create keys
   strs :: [String] <- replicateM 10000 rString
   -- scores to look up
   scrs :: [Double] <- replicateM 10000 $ randomRIO (0 , 9)
-  -- create BTI keys
-  let keys = map (bti . fromString) strs
+  -- create IBS keys
+  let keys = map (ibsFrom) strs
   -- create random keys, mostly not in strs
   unks :: [String] <- replicateM 10000 rString
-  let sknu = map (bti . fromString) unks
+  let sknu = map ibsFrom unks
   -- for 100 keys
   let hmsK = UCHS.fromList $ take 100 $ zip keys              scrs
-  let cisK =  CIS.fromList $ take 100 $ zip (map getBTI keys) scrs
+  let cisK =  CIS.fromList $ take 100 $ zip (map getIBS keys) scrs
   htH :: HTB <- HT.fromList $ take 100 $ zip keys scrs
   -- for 10 000 keys
   let hmsM = UCHS.fromList $ zip keys              scrs
-  let cisM =  CIS.fromList $ zip (map getBTI keys) scrs
+  let cisM =  CIS.fromList $ zip (map getIBS keys) scrs
   htK :: HTB <- HT.fromList $ zip keys scrs
   return (VU.fromList keys , VU.fromList sknu , (hmsK,cisK,htH) , (hmsM,cisM,htK) )
 

@@ -11,7 +11,7 @@ license-file:   LICENSE
 build-type:     Simple
 stability:      experimental
 cabal-version:  >= 1.10.0
-tested-with:    GHC == 7.10.3, GHC == 8.0.1
+tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.1
 synopsis:       Simple scoring schemes for word alignments
 description:
                 Provides a simple scoring scheme for word alignments.
@@ -32,6 +32,7 @@ library
                , bytestring
                , containers
                , file-embed             >= 0.0.6
+               , hashable               >= 1.2.0.0
                , lens                   >= 4.0
                , mtl                    >= 2.0
                , parsers                >= 0.12
@@ -41,7 +42,7 @@ library
                , unordered-containers   >= 0.2.3
                , utf8-string            >= 1.0
                --
-               , LinguisticsTypes       == 0.1.0.*
+               , InternedData           == 0.0.0.*
 
   exposed-modules:
     NLP.Scoring.Unigram
@@ -82,7 +83,7 @@ benchmark BenchmarkNLA
                , unordered-containers
                , vector
                --
-               , LinguisticsTypes
+               , InternedData
                , NaturalLanguageAlphabets
   hs-source-dirs:
     tests
@@ -129,7 +130,7 @@ test-suite properties
                , text
                , unordered-containers
                --
-               , LinguisticsTypes
+               , InternedData
                , NaturalLanguageAlphabets
 
 

@@ -1,6 +1,4 @@
 packages: .
---          ../Lib-bimaps
---          ../Lib-LinguisticsTypes
 
 optional-packages: ./*/*.cabal
 

@@ -36,7 +36,7 @@ import           Text.PrettyPrint.ANSI.Leijen (displayIO, renderPretty, linebrea
 import           Text.Trifecta as TT
 import           Text.Trifecta.Delta (Delta(..))
 
-import           NLP.Text.BTI
+import           Data.ByteString.Interned
 
 import           NLP.Scoring.Unigram
 
@@ -112,9 +112,9 @@ pUnigram = do
             -- fail $ "constant " <> show k <> " not found"
             return (-999999)
           Just v  -> return v
-  usUnigramMatch      <- (HM.fromList . map (first (bti***bti)) . HM.toList) <$> use matchScores
-  usUnigramInsertFstK <- (HM.fromList . map (first bti) . HM.toList) <$> use ignoredScoresFstK
-  usUnigramInsertSndL <- (HM.fromList . map (first bti) . HM.toList) <$> use ignoredScoresSndL
+  usUnigramMatch      <- (HM.fromList . map (first (ibsText *** ibsText)) . HM.toList) <$> use matchScores
+  usUnigramInsertFstK <- (HM.fromList . map (first ibsText) . HM.toList) <$> use ignoredScoresFstK
+  usUnigramInsertSndL <- (HM.fromList . map (first ibsText) . HM.toList) <$> use ignoredScoresSndL
   usGapLinear     <- uconstants "GapLinear"
   usGapOpen       <- uconstants "GapOpen"
   usGapExtension  <- uconstants "GapExtension"
