@@ -43,6 +43,9 @@ library
                , utf8-string            >= 1.0
                --
                , InternedData           == 0.0.0.*
+               -- TODO check these fixes
+               -- trifecta build error
+               , ansi-wl-pprint         == 0.6.7.3
 
   exposed-modules:
     NLP.Scoring.Unigram
