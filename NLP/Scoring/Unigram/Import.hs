@@ -12,6 +12,7 @@ import           Control.Monad
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.State.Class
 import           Control.Monad.Trans.State.Strict hiding (gets)
+import           Control.Monad.Except
 import           Data.ByteString (ByteString)
 import           Data.Char
 import           Data.HashMap.Strict (fromList, HashMap)
@@ -79,24 +80,24 @@ prettyErrorAndExit e = do
 errorToString :: ErrInfo -> String
 errorToString e = (displayS . renderPretty 0.8 80 $ _errDoc e) ""
 
-fromByteString :: ByteString -> String -> Either ErrInfo (UnigramScoring k l)
+fromByteString :: ByteString -> String -> Except ErrInfo (UnigramScoring k l)
 fromByteString s fn = r where
   p = parseByteString ((runStateT . runUnigramParser) pUnigram defaultEnv)
                       (Directed (UTF8.fromString fn) 0 0 0 0) s
   r = case p of
-        Success (p',e) -> Right p'
-        Failure e      -> Left e
+        Success (p',e) -> return p'
+        Failure e      -> throwError e
 
-fromFile :: Bool -> FilePath -> IO (Either ErrInfo (UnigramScoring k l))
+fromFile :: Bool -> FilePath -> ExceptT ErrInfo IO (UnigramScoring k l)
 fromFile warn fp = do
   p' <- TT.parseFromFileEx ((runStateT . runUnigramParser) pUnigram defaultEnv) fp
   case p' of
     Success (p,e) -> do
       let ws = e^.warnings
       unless (null ws || not warn) $ do
-        mapM_ T.putStrLn ws
-      return $ Right p
-    Failure e -> return $ Left e
+        liftIO $ mapM_ T.putStrLn ws
+      return p
+    Failure e -> throwError e
 
 pUnigram :: UnigramParser (UnigramScoring k l)
 pUnigram = do
