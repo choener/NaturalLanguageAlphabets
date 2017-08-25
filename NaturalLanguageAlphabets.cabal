@@ -39,14 +39,11 @@ library
                , parsers                >= 0.12
                , text                   >= 0.11
                , transformers           >= 0.4
-               , trifecta               >= 1.6
+               , trifecta               >= 1.7.1.1
                , unordered-containers   >= 0.2.3
                , utf8-string            >= 1.0
                --
                , InternedData           == 0.0.0.*
-               -- TODO check these fixes
-               -- trifecta build error
-               , ansi-wl-pprint         == 0.6.7.3
 
   exposed-modules:
     NLP.Scoring.Unigram
