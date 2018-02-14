@@ -2,6 +2,7 @@
 module Main where
 
 import           Control.Applicative
+import           Control.Monad.Except
 import           Data.Either
 import           Data.HashMap.Strict (fromList,union)
 import           Data.HashMap.Strict (lookupDefault, lookup)
@@ -57,7 +58,7 @@ prop_Aeson ( xs :: [((String,String),Double)]
 -- Everything here should succeed
 
 case_Import_uni01 = do
-  eu <- fromFile False "./tests/uni01.score"
+  eu <- runExceptT $ fromFile False "./tests/uni01.score"
   assertBool ("uni01 load should succeed but fails with\n" ++ (either errorToString show eu)) $ isRight eu
   let Right u = eu
   assertEqual "EqualScore Consonant 4 F~f" (Just 4) . lookup (ibsText "F", ibsText "f") $ usUnigramMatch u
@@ -66,7 +67,7 @@ case_Import_uni01 = do
 -- Here we test that the parser should fail on wrong input
 
 case_Import_uni02 = do
-  eu <- fromFile False "./tests/uni02.score"
+  eu <- runExceptT $ fromFile False "./tests/uni02.score"
   assertBool "uni02 load should fail" $ isLeft eu
 
 main :: IO ()

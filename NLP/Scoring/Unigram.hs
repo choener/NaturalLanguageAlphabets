@@ -19,7 +19,7 @@ import Data.ByteString.Interned
 -- Note that even though @IBS k@ and @IBS l@ have different types,
 -- mismatches are checked using the underlying @Int@ representation.
 
-matchUnigram :: UnigramScoring k l -> IBS k -> IBS l -> Double
+matchUnigram ∷ UnigramScoring k l → IBS k → IBS l → Double
 matchUnigram UnigramScoring{..} x y =
   lookupDefault (if getIBS x == getIBS y then usDefaultMatch else usDefaultMismatch) (x,y) usUnigramMatch
 {-# Inline matchUnigram #-}
@@ -49,31 +49,31 @@ insertUnigramSndL UnigramScoring{..} x =
 -- TODO binary and cereal instances
 
 data UnigramScoring k l = UnigramScoring
-  { usUnigramMatch          :: !(HashMap (IBS k, IBS l) Double)
+  { usUnigramMatch          ∷ !(HashMap (IBS k, IBS l) Double)
   -- ^ All known matching characters and associated scores.
-  , usUnigramInsertFstK     :: !(HashMap (IBS k) Double)
+  , usUnigramInsertFstK     ∷ !(HashMap (IBS k) Double)
   -- ^ Characters that can be deleted with costs different from
   -- @gapOpen@/@gapExtension@. This is the insertion map, associated with
   -- the first type @k@.
-  , usUnigramInsertSndL     :: !(HashMap (IBS l) Double)
+  , usUnigramInsertSndL     ∷ !(HashMap (IBS l) Double)
   -- ^ Characters that can be deleted with costs different from
   -- @gapOpen@/@gapExtension@. This is the insertion map, associated with
   -- the second type @l@.
-  , usGapLinear             :: !Double
+  , usGapLinear             ∷ !Double
   -- ^ linear gap scores
-  , usGapOpen               :: !Double
+  , usGapOpen               ∷ !Double
   -- ^ Gap opening costs for Gotoh-style grammars.
-  , usGapExtension          :: !Double
+  , usGapExtension          ∷ !Double
   -- ^ Gap extension costs for Gotoh-style grammars.
-  , usDefaultMatch          :: !Double
+  , usDefaultMatch          ∷ !Double
   -- ^ Default score for characters matching, i.e. @x==y@.
-  , usDefaultMismatch       :: !Double
+  , usDefaultMismatch       ∷ !Double
   -- ^ Default score for characters not matching, i.e. @x/=y@.
-  , usPrefixSuffixLinear    :: !Double
+  , usPrefixSuffixLinear    ∷ !Double
   -- ^ Special gap score for a prefix or suffix.
-  , usPrefixSuffixOpen      :: !Double
+  , usPrefixSuffixOpen      ∷ !Double
   -- ^ Special gap opening score for a prefix or suffix.
-  , usPrefixSuffixExtension :: !Double
+  , usPrefixSuffixExtension ∷ !Double
   -- ^ Special gap extension score for a prefix or suffix.
   }
   deriving (Read,Show,Eq,Generic)

@@ -44,12 +44,12 @@ import           NLP.Scoring.Unigram
 
 
 data Env = Env
-  { _warnings           :: S.Seq Text
-  , _defaults           :: HashMap Text Double
-  , _charGroups         :: HashMap Text (HashSet Text)
-  , _matchScores        :: HashMap (Text,Text) Double
-  , _ignoredScoresFstK  :: HashMap Text Double
-  , _ignoredScoresSndL  :: HashMap Text Double
+  { _warnings           ∷ !(S.Seq Text)
+  , _defaults           ∷ !(HashMap Text Double)
+  , _charGroups         ∷ !(HashMap Text (HashSet Text))
+  , _matchScores        ∷ !(HashMap (Text,Text) Double)
+  , _ignoredScoresFstK  ∷ !(HashMap Text Double)
+  , _ignoredScoresSndL  ∷ !(HashMap Text Double)
   }
   deriving (Show)
 
@@ -66,56 +66,56 @@ defaultEnv = Env
 
 
 
-test = fromFile True "scoring/unigramdefault.score"
+test = runExceptT $ fromFile True "scoring/unigramdefault.score"
 
 -- | This will prettyprint the error message and ungracefully exit
 
-prettyErrorAndExit :: MonadIO m => ErrInfo -> m ()
+prettyErrorAndExit ∷ MonadIO m ⇒ ErrInfo → m ()
 prettyErrorAndExit e = do
   liftIO $ displayIO stdout $ renderPretty 0.8 80 $ (_errDoc e) <> linebreak
   liftIO $ exitFailure
 
 -- | Returns the error message, but will not exit.
 
-errorToString :: ErrInfo -> String
+errorToString :: ErrInfo → String
 errorToString e = (displayS . renderPretty 0.8 80 $ _errDoc e) ""
 
-fromByteString :: ByteString -> String -> Except ErrInfo (UnigramScoring k l)
+fromByteString ∷ ByteString → String → Except ErrInfo (UnigramScoring k l)
 fromByteString s fn = r where
   p = parseByteString ((runStateT . runUnigramParser) pUnigram defaultEnv)
                       (Directed (UTF8.fromString fn) 0 0 0 0) s
   r = case p of
-        Success (p',e) -> return p'
-        Failure e      -> throwError e
+        Success (p',e) → return p'
+        Failure e      → throwError e
 
-fromFile :: Bool -> FilePath -> ExceptT ErrInfo IO (UnigramScoring k l)
+fromFile ∷ Bool → FilePath → ExceptT ErrInfo IO (UnigramScoring k l)
 fromFile warn fp = do
   p' <- TT.parseFromFileEx ((runStateT . runUnigramParser) pUnigram defaultEnv) fp
   case p' of
-    Success (p,e) -> do
+    Success (p,e) → do
       let ws = e^.warnings
       unless (null ws || not warn) $ do
         liftIO $ mapM_ T.putStrLn ws
       return p
-    Failure e -> throwError e
+    Failure e → throwError e
 
-pUnigram :: UnigramParser (UnigramScoring k l)
+pUnigram ∷ UnigramParser (UnigramScoring k l)
 pUnigram = do
   skipOptional someSpace
-  many $ choice [pDefaults, pCharGroup, pSimilarity, pEquality, pIgnored]
+  many $ choice [pDefaults,pCharGroup,pSimilarity,pEquality,pIgnored]
   eof
-  let uconstants :: Text -> UnigramParser Double
+  let uconstants ∷ Text → UnigramParser Double
       uconstants k = do
-        kv <- use defaults
+        kv ← use defaults
         case HM.lookup k kv of
-          Nothing -> do
+          Nothing → do
             warnings %= (S.|> ("constant " <> k <> " not found, using default (-999999)"))
             -- fail $ "constant " <> show k <> " not found"
             return (-999999)
-          Just v  -> return v
-  usUnigramMatch      <- (HM.fromList . map (first (ibsText *** ibsText)) . HM.toList) <$> use matchScores
-  usUnigramInsertFstK <- (HM.fromList . map (first ibsText) . HM.toList) <$> use ignoredScoresFstK
-  usUnigramInsertSndL <- (HM.fromList . map (first ibsText) . HM.toList) <$> use ignoredScoresSndL
+          Just v  → return v
+  usUnigramMatch      ← (HM.fromList . map (first (ibsText *** ibsText)) . HM.toList) <$> use matchScores
+  usUnigramInsertFstK ← (HM.fromList . map (first ibsText) . HM.toList) <$> use ignoredScoresFstK
+  usUnigramInsertSndL ← (HM.fromList . map (first ibsText) . HM.toList) <$> use ignoredScoresSndL
   usGapLinear     <- uconstants "GapLinear"
   usGapOpen       <- uconstants "GapOpen"
   usGapExtension  <- uconstants "GapExtension"

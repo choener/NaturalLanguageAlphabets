@@ -4,14 +4,14 @@ author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 homepage:       https://github.com/choener/NaturalLanguageAlphabets
 bug-reports:    https://github.com/choener/NaturalLanguageAlphabets/issues
-copyright:      Christian Hoener zu Siederdissen, 2014-2017
+copyright:      Christian Hoener zu Siederdissen, 2014-2018
 category:       Natural Language Processing
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 stability:      experimental
 cabal-version:  >= 1.10.0
-tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.1
+tested-with:    GHC == 8.0.2, GHC == 8.2.2
 synopsis:       Simple scoring schemes for word alignments
 description:
                 Provides a simple scoring scheme for word alignments.
@@ -123,6 +123,7 @@ test-suite properties
                , aeson
                , binary
                , cereal
+               , mtl
                , QuickCheck
                , tasty                  >= 0.11
                , tasty-hunit            >= 0.9
