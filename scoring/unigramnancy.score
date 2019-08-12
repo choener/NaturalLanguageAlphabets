@@ -1,0 +1,64 @@
+-- These are all vowels, but all 'a's are equivalent with respect to this
+-- scoring. It is only required to give 'EqSet's if you have more than one
+-- equivalent character. In this EqSet, everything gets a score of 'Eq Vowel'
+-- (==2).
+EqSet Vowel a å æ 4 Я я Α α ʌ а
+EqSet Vowel e ê ɛ 3 Ε ε
+EqSet Vowel i I y Y ɨ ʸ И и Η η Ι ι υ
+EqSet Vowel o ø 0 O Ω ω
+EqSet Vowel u ʏ У у Ю ю ʊ
+-- These are sets of characters belonging to a certain class. In this case, we
+-- have consonants.
+Set Conso    c q w x 6 9 ɲ ʔ ʕ
+Set Liquid   r 7 ʁ
+EqSet Conso  h H ħ Х х x Χ χ
+EqSet Conso  Б б B b Β β
+EqSet Conso  В в V v
+EqSet Conso  Г г G g Γ γ
+EqSet Conso  Д д D d Δ δ ð ɣ
+EqSet Conso  Ж ж ʒ č
+EqSet Conso  З з z Z Ζ ζ
+EqSet Conso  Й й j J
+EqSet Conso  К к K k Κ κ
+EqSet Liquid  Л л l L Λ λ ƛ
+EqSet Conso  М м m M Μ μ
+EqSet Conso  Н н N n Ν ν
+EqSet Conso  П п P p Π π
+EqSet Р р R r Ρ ρ
+EqSet Conso  С с S s Σ σ
+EqSet Conso  Т т t T Τ τ
+EqSet Conso  Ф ф F f V v υ Φ φ
+EqSet Conso  Ц ц
+EqSet Conso  Ч ч
+EqSet Conso  Ш ш ʃ š
+EqSet Conso  Щ щ
+EqSet Conso  Ь ь
+EqSet Conso  Θ θ
+EqSet Conso  Ξ ξ
+EqSet Conso  Ψ ψ
+-- Here we say that whenever we see a consonant aligned to the same consonant
+-- in the other word, give this score.
+Eq Conso   4
+Eq Liquid  3
+Eq Vowel   2
+-- Whenever we align two consonants that are not equal (or equivalent) we give
+-- this score.
+InSet   Conso    Conso     0
+InSet   Conso    Liquid   -1
+InSet   Conso    Vowel    -999999
+InSet   Liquid   Conso    -1
+InSet   Liquid   Liquid   -1
+InSet   Liquid   Vowel    -1
+InSet   Vowel    Conso    -999999
+InSet   Vowel    Liquid   -1
+InSet   Vowel    Vowel     0
+-- How to score a gap in a sequence
+Gap         -4
+-- Later on we want affine gap scoring, it's already here but not used
+GapOpen     -4
+GapExtend   -1
+-- This score is used when we align the same character but it's one we didn't
+-- specify in our sets
+Match        1
+-- And finally how to score a mismatch that doesn't fit into the above
+Mismatch    -999999
