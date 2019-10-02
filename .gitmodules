@@ -1,0 +1,4 @@
+[submodule "deps/InternedData"]
+	path = deps/InternedData
+	url = workrepo:Repository/Lib-InternedData
+	branch = devel

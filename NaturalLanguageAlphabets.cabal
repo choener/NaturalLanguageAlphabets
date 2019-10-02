@@ -1,17 +1,17 @@
+cabal-version:  2.2
 name:           NaturalLanguageAlphabets
 version:        0.2.1.0
 author:         Christian Hoener zu Siederdissen
 maintainer:     choener@bioinf.uni-leipzig.de
 homepage:       https://github.com/choener/NaturalLanguageAlphabets
 bug-reports:    https://github.com/choener/NaturalLanguageAlphabets/issues
-copyright:      Christian Hoener zu Siederdissen, 2014-2018
+copyright:      Christian Hoener zu Siederdissen, 2014-2019
 category:       Natural Language Processing
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 stability:      experimental
-cabal-version:  >= 1.10.0
-tested-with:    GHC == 8.0.2, GHC == 8.2.2
+tested-with:    GHC == 8.6.4
 synopsis:       Simple scoring schemes for word alignments
 description:
                 Provides a simple scoring scheme for word alignments.
@@ -22,6 +22,7 @@ extra-source-files:
   README.md
   changelog.md
   scoring/simpleunigram.score
+  scoring/unigramnancy.score
 
 
 
@@ -39,7 +40,8 @@ library
                , parsers                >= 0.12
                , text                   >= 0.11
                , transformers           >= 0.4
-               , trifecta               >= 1.7.1.1
+               -- last version to use ansi-wl-pprint, will bump with next nixos, presumably
+               , trifecta               == 2
                , unordered-containers   >= 0.2.3
                , utf8-string            >= 1.0
                --

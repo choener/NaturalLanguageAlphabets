@@ -1,7 +1,8 @@
 
 -- |
 --
--- TODO normalization of characters!
+-- TODO normalization of characters! (though it might be better to do this not in the importer, but
+-- a normalization function)
 
 module NLP.Scoring.Unigram.Import where
 
@@ -82,7 +83,7 @@ errorToString e = (displayS . renderPretty 0.8 80 $ _errDoc e) ""
 
 fromByteString ∷ ByteString → String → Except ErrInfo (UnigramScoring k l)
 fromByteString s fn = r where
-  p = parseByteString (runStateT pUnigram defaultEnv)
+  p = parseByteString (runP $ runStateT pUnigram defaultEnv)
                       (Directed (UTF8.fromString fn) 0 0 0 0) s
   r = case p of
         Success (p',e) → return p'
@@ -90,7 +91,7 @@ fromByteString s fn = r where
 
 fromFile ∷ Bool → FilePath → ExceptT ErrInfo IO (UnigramScoring k l)
 fromFile warn fp = do
-  p' <- TT.parseFromFileEx (runStateT pUnigram defaultEnv) fp
+  p' <- TT.parseFromFileEx (runP $ runStateT pUnigram defaultEnv) fp
   case p' of
     Success (p,e) → do
       let ws = e^.warnings
@@ -101,8 +102,7 @@ fromFile warn fp = do
 
 pUnigram ∷ UnigramParser (UnigramScoring k l)
 pUnigram = do
-  skipOptional someSpace'
-  someSpace'
+  whiteSpace
   many $ choice [pDefaults,pCharGroup,pSimilarity,pEquality,pIgnored]
   eof
   let uconstants ∷ Text → UnigramParser Double
@@ -111,7 +111,6 @@ pUnigram = do
         case HM.lookup k kv of
           Nothing → do
             warnings %= (S.|> ("constant " <> k <> " not found, using default (-999999)"))
-            -- fail $ "constant " <> show k <> " not found"
             return (-999999)
           Just v  → return v
   usUnigramMatch      ← (HM.fromList . map (first (ibsText *** ibsText)) . HM.toList) <$> use matchScores
@@ -157,7 +156,7 @@ pCharGroup = do
     rol <- restOfLine
     unless (rol == "\n") $ fail $ show (gs,rol)
     return gs
-  someSpace'
+  someSpace
   let vs = applySpecialFunctions ls vs'
   charGroups %= HM.insert ty vs
 
@@ -243,61 +242,6 @@ specialFunctions =
 
 applySpecialFunctions ls xs =
   HS.unions $ xs : [ HS.map sf xs | (sfn,sf) <- specialFunctions, sfn `elem` ls ]
-{-
--- | Read a line containing an "EqualChars". Will only parse successfully if the
--- set is not yet known. Inserts the set into the @Env@.
-
-pEqualChars :: UnigramParser ()
-pEqualChars = do
-  ks <- uses equalScores HM.keys
-  reserve reserved "EqualChars"
-  ls <- option [] . braces $ pExpansionOptions `sepEndBy` comma
-  when (null ks) $ fail "no EqualChars's defined!"
-  ty <- choice $ map (\t -> runUnspaced (textSymbol t) <* someSpace) ks
-  vs <- runUnlined $ some pGrapheme
-  someSpace
-  -- handle expansion options
-  let vsFinal =  vs
-              ++ [ T.toUpper v | "ToUpper" `elem` ls, v <- vs ]
-              ++ [ T.toLower v | "ToLower" `elem` ls, v <- vs ]
-  equalChars %= (HS.insert (ty, HS.fromList vsFinal))
-
-pEqualScores :: UnigramParser ()
-pEqualScores = do
-  reserve reserved "EqualScore"
-  ty <- ident reserved
-  v  <- either fromIntegral id <$> integerOrDouble
-  equalScores %= HM.insert ty v
-
-pSimilarScores :: UnigramParser ()
-pSimilarScores = do
-  reserve reserved "SimilarScore"
-  ty1 <- ident reserved
-  ty2 <- ident reserved
-  v <- either fromIntegral id <$> integerOrDouble
-  similarScores %= HM.insert (ty1,ty2) v
-
-pIgnored :: UnigramParser ()
-pIgnored = do
-  reserve reserved "IgnoredChars"
-  is <- runUnlined $ some pGrapheme
-  someSpace
-  ignoredChars %= HS.union (HS.fromList is)
-
-{-
-pChoice :: UnigramParser ()
-pChoice = choice $ map pOneChoice cs
-  where
-    cs = [ "IgnoreCase"
-         ]
-    pOneChoice :: Text -> UnigramParser ()
-    pOneChoice r = do
-      reserveText reserved r
-      tf <- option True $ (True <$ textSymbol "True") <|> (False <$ textSymbol "False")
-      when tf $ choices %= HS.insert r
--}
-
--}
 
 -- | TODO only insert warning, not error, after seeing a character again!
 
@@ -313,9 +257,27 @@ reserved = emptyIdents { _styleReserved = rs }
                          -- , "IgnoredChars", "CharGroup"
                          ]
 
-type UnigramParser = StateT Env Parser
+-- | This is just the trifecta parser, but with haskell-style comments enabled.
+
+newtype P a = P { runP :: Parser a }
+  deriving ( Applicative
+           , Monad
+           , Functor
+           , DeltaParsing
+           , MonadPlus
+           , Alternative
+           , CharParsing
+           , Parsing
+           )
+
+-- | This enables the haskell-style comments.
+
+instance TokenParsing P where
+  someSpace = buildSomeSpaceParser
+    (skipSome (satisfy isSpace))
+    haskellCommentStyle
+
+type UnigramParser = StateT Env P
 
 deriving instance DeltaParsing (Unlined UnigramParser)
-
-someSpace' = buildSomeSpaceParser someSpace haskellCommentStyle <|> pure ()
 

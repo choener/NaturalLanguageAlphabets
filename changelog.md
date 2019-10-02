@@ -2,6 +2,7 @@
 -------
 
 - using polykinded BTI to disallow language name confusion
+- fixed up parsing with trifecta-2
 
 0.2.0.0
 -------
