@@ -82,7 +82,7 @@ errorToString e = (displayS . renderPretty 0.8 80 $ _errDoc e) ""
 
 fromByteString ∷ ByteString → String → Except ErrInfo (UnigramScoring k l)
 fromByteString s fn = r where
-  p = parseByteString ((runStateT . runUnigramParser) pUnigram defaultEnv)
+  p = parseByteString (runStateT pUnigram defaultEnv)
                       (Directed (UTF8.fromString fn) 0 0 0 0) s
   r = case p of
         Success (p',e) → return p'
@@ -90,7 +90,7 @@ fromByteString s fn = r where
 
 fromFile ∷ Bool → FilePath → ExceptT ErrInfo IO (UnigramScoring k l)
 fromFile warn fp = do
-  p' <- TT.parseFromFileEx ((runStateT . runUnigramParser) pUnigram defaultEnv) fp
+  p' <- TT.parseFromFileEx (runStateT pUnigram defaultEnv) fp
   case p' of
     Success (p,e) → do
       let ws = e^.warnings
@@ -101,7 +101,8 @@ fromFile warn fp = do
 
 pUnigram ∷ UnigramParser (UnigramScoring k l)
 pUnigram = do
-  skipOptional someSpace
+  skipOptional someSpace'
+  someSpace'
   many $ choice [pDefaults,pCharGroup,pSimilarity,pEquality,pIgnored]
   eof
   let uconstants ∷ Text → UnigramParser Double
@@ -156,7 +157,7 @@ pCharGroup = do
     rol <- restOfLine
     unless (rol == "\n") $ fail $ show (gs,rol)
     return gs
-  someSpace
+  someSpace'
   let vs = applySpecialFunctions ls vs'
   charGroups %= HM.insert ty vs
 
@@ -312,23 +313,9 @@ reserved = emptyIdents { _styleReserved = rs }
                          -- , "IgnoredChars", "CharGroup"
                          ]
 
-
-newtype UnigramParser a = UnigramParser { runUnigramParser :: StateT Env Parser a }
-  deriving
-    ( Alternative
-    , Applicative
-    , CharParsing
-    , DeltaParsing
-    , Functor
-    , Monad
-    , MonadPlus
-    , MonadState Env
-    , Parsing
-    , LookAheadParsing
-    )
-
-instance TokenParsing UnigramParser where
-  someSpace = buildSomeSpaceParser (() <$ space) haskellCommentStyle
+type UnigramParser = StateT Env Parser
 
 deriving instance DeltaParsing (Unlined UnigramParser)
+
+someSpace' = buildSomeSpaceParser someSpace haskellCommentStyle <|> pure ()
 
