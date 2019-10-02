@@ -23,6 +23,8 @@ extra-source-files:
   changelog.md
   scoring/unigramdefault.score
   scoring/unigramnancy.score
+  tests/uni01.score
+  tests/uni02.score
 
 
 
