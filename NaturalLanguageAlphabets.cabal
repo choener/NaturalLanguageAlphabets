@@ -21,7 +21,7 @@ description:
 extra-source-files:
   README.md
   changelog.md
-  scoring/simpleunigram.score
+  scoring/unigramdefault.score
   scoring/unigramnancy.score
 
 
